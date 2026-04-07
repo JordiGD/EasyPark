@@ -1,0 +1,16 @@
+target
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+.mvn/timing.properties
+.mvn/outputs
+.DS_Store
+*.swp
+*.swo
+*~
+.git
+.gitignore
+README.md
+.env
+.env.local
+*.iml
+.idea

@@ -1,0 +1,113 @@
+version: '3.8'
+
+# Cargar variables de entorno desde .env.docker
+env_file:
+  - .env.docker
+
+services:
+  # ==================== BASE DE DATOS ====================
+  mysql:
+    image: mysql:8.0
+    container_name: easypark-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: easypark_db
+      MYSQL_USER: easypark_user
+      MYSQL_PASSWORD: easypark_pass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - easypark-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # ==================== BACKEND (Spring Boot) ====================
+  backend:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    container_name: easypark-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/easypark_db
+      SPRING_DATASOURCE_USERNAME: easypark_user
+      SPRING_DATASOURCE_PASSWORD: easypark_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: 'false'
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - easypark-network
+    volumes:
+      - ./user:/app
+    command: mvn spring-boot:run
+
+  # ==================== OWNER APP (React) ====================
+  owner-app:
+    build:
+      context: ./owner-app
+      dockerfile: Dockerfile
+    container_name: easypark-owner-app
+    environment:
+      REACT_APP_API_URL: http://localhost:8080
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - easypark-network
+    volumes:
+      - ./owner-app/src:/app/src
+
+  # ==================== ADMIN APP (React) ====================
+  admin-app:
+    build:
+      context: ./admin-app
+      dockerfile: Dockerfile
+    container_name: easypark-admin-app
+    environment:
+      REACT_APP_API_URL: http://localhost:8080
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - easypark-network
+    volumes:
+      - ./admin-app/src:/app/src
+
+  # ==================== NGINX (Proxy Reverso - Opcional) ====================
+  nginx:
+    image: nginx:alpine
+    container_name: easypark-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - owner-app
+      - admin-app
+    networks:
+      - easypark-network
+    profiles:
+      - production
+
+volumes:
+  mysql_data:
+
+networks:
+  easypark-network:
+    driver: bridge
