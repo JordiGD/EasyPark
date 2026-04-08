@@ -1,5 +1,5 @@
 # Dockerfile para Backend (Spring Boot)
-FROM maven:3.8.1-openjdk-11 AS builder
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage de runtime
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 

@@ -1,9 +1,3 @@
-version: '3.8'
-
-# Cargar variables de entorno desde .env.docker
-env_file:
-  - .env.docker
-
 services:
   # ==================== BASE DE DATOS ====================
   mysql:
@@ -46,9 +40,6 @@ services:
         condition: service_healthy
     networks:
       - easypark-network
-    volumes:
-      - ./user:/app
-    command: mvn spring-boot:run
 
   # ==================== OWNER APP (React) ====================
   owner-app:

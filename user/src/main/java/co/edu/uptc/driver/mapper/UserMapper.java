@@ -6,10 +6,8 @@ import org.mapstruct.factory.Mappers;
 import co.edu.uptc.driver.dto.UserDTO;
 import co.edu.uptc.driver.entity.User;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface UserMapper {
-
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
     UserDTO toDTO(User user);
     User toEntity(UserDTO userDTO);

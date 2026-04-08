@@ -11,7 +11,6 @@ public class OwnerDTO {
 
     private Long ownerID;
     private Long userID;
-    private String address;
-    private String description;
-    
+    private List<Long> parkingIds;
+           
 }

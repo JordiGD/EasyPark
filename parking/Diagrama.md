@@ -21,6 +21,7 @@ package "Service" {
     + saveParking(parkingDTO)
     + updateParking(parkingDTO)
     + getParkingById(id)
+    + getParkingByOwnerId(id)
     + getAllParkings()
   }
 }

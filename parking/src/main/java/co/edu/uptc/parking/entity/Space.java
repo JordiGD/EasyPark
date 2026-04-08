@@ -1,4 +1,4 @@
-package co.edu.uptc.driver.entity;
+package co.edu.uptc.parking.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,14 +10,15 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Owner {
+@AllArgsConstructor
+public class Space {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long ownerID;
-    private Long userID;
-    private List<Long> parkingIds;
-    
+    private Long id;
+    private Long parkingId;
+    private String spaceNumber;
+    private String status;
+
 }

@@ -22,17 +22,5 @@ public class OwnerService {
         Owner savedOwner = ownerRepo.save(owner);
         return ownerMapper.toDTO(savedOwner);
     }
-
-    public OwnerDTO updateParking(OwnerDTO ownerDTO) {
-        Owner existingOwner = ownerRepo.findById(ownerDTO.getOwnerID())
-                .orElseThrow(() -> new RuntimeException("Propietario no encontrado"));
-
-        existingOwner.setUserID(ownerDTO.getUserID());
-        existingOwner.setAddress(ownerDTO.getAddress());
-        existingOwner.setDescription(ownerDTO.getDescription());
-
-        Owner updatedOwner = ownerRepo.save(existingOwner);
-        return ownerMapper.toDTO(updatedOwner);
-    }
     
 }
