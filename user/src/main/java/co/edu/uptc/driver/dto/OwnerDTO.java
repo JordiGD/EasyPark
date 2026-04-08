@@ -11,6 +11,5 @@ public class OwnerDTO {
 
     private Long ownerID;
     private Long userID;
-    private List<Long> parkingIds;
            
 }

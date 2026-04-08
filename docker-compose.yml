@@ -1,6 +1,6 @@
 services:
   # ==================== BASE DE DATOS ====================
-  mysql:
+  dbUser:
     image: mysql:8.0
     container_name: easypark-mysql
     environment:
@@ -27,16 +27,69 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/easypark_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://dbUser:3306/easypark_db
       SPRING_DATASOURCE_USERNAME: easypark_user
       SPRING_DATASOURCE_PASSWORD: easypark_pass123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: 'false'
       SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+      EUREKA_INSTANCE_HOSTNAME: user-service
     ports:
       - "8080:8080"
     depends_on:
-      mysql:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
+  # ==================== EUREKA SERVER (Service Discovery) ====================
+  eureka:
+    build:
+      context: ./eurekaserver
+      dockerfile: Dockerfile
+    container_name: easypark-eureka
+    environment:
+      SERVER_PORT: 8761
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: 'false'
+      EUREKA_CLIENT_FETCH_REGISTRY: 'false'
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+    ports:
+      - "8761:8761"
+    networks:
+      - easypark-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ==================== PARKING SERVICE (Spring Boot Microservice) ====================
+  parking-service:
+    build:
+      context: ./parking
+      dockerfile: Dockerfile
+    container_name: easypark-parking
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://dbUser:3306/parking_db
+      SPRING_DATASOURCE_USERNAME: parking_user
+      SPRING_DATASOURCE_PASSWORD: parking_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: 'false'
+      SERVER_PORT: 8081
+      SPRING_APPLICATION_NAME: parking-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+      EUREKA_INSTANCE_HOSTNAME: parking-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
         condition: service_healthy
     networks:
       - easypark-network
@@ -89,8 +142,10 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
+      - parking-service
       - owner-app
       - admin-app
+      - eureka
     networks:
       - easypark-network
     profiles:

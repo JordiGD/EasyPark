@@ -17,10 +17,9 @@ public class OwnerService {
     @Autowired
     private OwnerMapper ownerMapper;
 
-    public OwnerDTO saveParking(OwnerDTO ownerDTO) {
-        Owner owner = ownerMapper.toEntity(ownerDTO);
-        Owner savedOwner = ownerRepo.save(owner);
-        return ownerMapper.toDTO(savedOwner);
+    public OwnerDTO getOwnerById(Long ownerId) {
+        Owner owner = ownerRepo.findById(ownerId).orElseThrow(() -> new RuntimeException("Owner not found"));
+        return ownerMapper.toDTO(owner);
     }
     
 }

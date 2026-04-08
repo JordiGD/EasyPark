@@ -23,8 +23,7 @@ rectangle "App Propietarios" {
   Propietario --> (Registrar Propietario)
   Propietario --> (LoginPropietarios)
   Propietario --> (Actualizar Propietario)
-  Propietario --> (Registrar Parqueadero)
-  Propietario --> (Actualizar Parqueadero)
+  Propietario --> (Obtener propietario)
 }
 
 ' =========================
@@ -52,8 +51,7 @@ rectangle "Microservicio de Usuarios" {
   }
 
   rectangle "OwnerController" {
-    (saveParking)
-    (updateParking)
+    (getOwnerById)
   }
 }
 
@@ -72,8 +70,7 @@ rectangle "Microservicio de Usuarios" {
 (Registrar Propietario) --> (saveUser)
 (LoginPropietarios) --> (login)
 (Actualizar Propietario) --> (updateUser)
-(Actualizar Parqueadero) --> (updateParking)
-(Registrar Parqueadero) --> (saveParking)
+(Obtener propietario) --> (getOwnerById)
 
 ' Admin
 (Login Admin) --> (login)

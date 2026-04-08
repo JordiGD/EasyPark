@@ -17,8 +17,7 @@ package "Controller" {
   }
 
   class OwnerController {
-    + saveParking(ownerDTO)
-    + updateParking(ownerDTO)
+    + getOwnerById(idOwner)
   }
 }
 
@@ -38,8 +37,7 @@ package "Service" {
   }
 
   class OwnerService {
-    + saveParking(ownerDTO)
-    + updateParking(ownerDTO)
+    + getOwnerById(idOwner)
   }
 }
 
@@ -80,8 +78,6 @@ package "Entity" {
   class Owner {
     - ownerID: Long
     - userID: Long
-    - address: String
-    - description: String
   }
 }
 
@@ -109,8 +105,6 @@ package "DTO" {
   class OwnerDTO {
     - ownerID: Long
     - userID: Long
-    - address: String
-    - description: String
   }
 }
 

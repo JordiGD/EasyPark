@@ -1,5 +1,5 @@
 server:
-    port: 8080
+    port: 8081
 
 eureka:
     client:
@@ -7,15 +7,15 @@ eureka:
             defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
     instance:
         prefer-ip-address: true
-        hostname: user-service
+        hostname: parking-service
 
 spring:
     application:
-        name: user-service
+        name: parking-service
     datasource:
-        url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/easypark_db}
-        username: ${SPRING_DATASOURCE_USERNAME:easypark_user}
-        password: ${SPRING_DATASOURCE_PASSWORD:easypark_pass123}
+        url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/parking_db}
+        username: ${SPRING_DATASOURCE_USERNAME:parking_user}
+        password: ${SPRING_DATASOURCE_PASSWORD:parking_pass123}
         driver-class-name: com.mysql.cj.jdbc.Driver
     jpa:
         hibernate:

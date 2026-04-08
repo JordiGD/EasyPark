@@ -29,6 +29,11 @@ public class ParkingService {
         return parking.map(ParkingMapper.INSTANCE::toDTO).orElse(null);
     }
 
+    public boolean getStatusParkingById(Long id) {
+        Optional<Parking> parking = parkingRepo.findById(id);
+        return parking.map(Parking::isAvailability).orElse(false);
+    }
+
     public ParkingDTO updateParking(Long id, ParkingDTO parkingDTO) {
         Optional<Parking> existingParking = parkingRepo.findById(id);
         

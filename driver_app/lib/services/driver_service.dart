@@ -5,6 +5,7 @@ import '../models/driver.dart';
 class DriverService {
   // URL del servidor backend
   static const String baseUrl = 'http://10.0.2.2:8080'; // Emulador Android
+  static const String parkingApiUrl = 'http://10.0.2.2:8081'; // Parking Service
   // Para dispositivo físico: 'http://192.168.X.X:8080'
 
   // ==================== USER ENDPOINTS ====================
@@ -128,6 +129,127 @@ class DriverService {
       }
     } catch (e) {
       throw Exception('Error en updateVehicle: $e');
+    }
+  }
+
+  // ==================== PARKING ENDPOINTS ====================
+
+  /// Obtener todos los parqueaderos disponibles
+  Future<List<Map<String, dynamic>>> getAllParkings() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$parkingApiUrl/api/parkings'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Error al obtener parqueaderos');
+      }
+    } catch (e) {
+      throw Exception('Error en getAllParkings: $e');
+    }
+  }
+
+  /// Obtener detalles de un parqueadero
+  Future<Map<String, dynamic>> getParkingById(int parkingId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$parkingApiUrl/api/parkings/$parkingId'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Error al obtener parqueadero: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getParkingById: $e');
+    }
+  }
+
+  /// Obtener status/ocupación de un parqueadero
+  Future<Map<String, dynamic>> getParkingStatus(int parkingId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$parkingApiUrl/api/parkings/$parkingId/status'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Error al obtener status: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getParkingStatus: $e');
+    }
+  }
+
+  // ==================== SPACE ENDPOINTS ====================
+
+  /// Obtener espacios de un parqueadero
+  Future<List<Map<String, dynamic>>> getSpacesByParking(int parkingId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$parkingApiUrl/api/spaces/parking/$parkingId'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Error al obtener espacios');
+      }
+    } catch (e) {
+      throw Exception('Error en getSpacesByParking: $e');
+    }
+  }
+
+  /// Obtener estado de un espacio
+  Future<String> getSpaceStatus(int spaceId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$parkingApiUrl/api/spaces/$spaceId/status'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        throw Exception('Error al obtener estado del espacio');
+      }
+    } catch (e) {
+      throw Exception('Error en getSpaceStatus: $e');
     }
   }
 

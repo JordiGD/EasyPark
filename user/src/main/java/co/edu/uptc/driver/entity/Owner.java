@@ -18,6 +18,5 @@ public class Owner {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long ownerID;
     private Long userID;
-    private List<Long> parkingIds;
     
 }

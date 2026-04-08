@@ -9,7 +9,15 @@ package "Controller" {
     + saveParking(parkingDTO)
     + updateParking(parkingDTO)
     + getParkingById(id)
+    + getParkingByOwnerId(id)
     + getAllParkings()
+    + getStatusParkingById(id)
+  }
+  class SpaceController {
+    + createSpace(parkingId)
+    + getSpacesByParking(parkingId)
+    + updateStatusSpace(spaceId)
+    + getSpaceStatusById(spaceId)
   }
 }
 
@@ -23,6 +31,13 @@ package "Service" {
     + getParkingById(id)
     + getParkingByOwnerId(id)
     + getAllParkings()
+    + getStatusParkingById(id)
+  }
+  class SpaceService {
+    + createSpace(parkingId)
+    + getSpacesByParking(parkingId)
+    + updateStatusSpace(spaceId)
+    + getSpaceStatusById(spaceId)
   }
 }
 
@@ -31,6 +46,7 @@ package "Service" {
 ' =========================
 package "Repository" {
   interface ParkingRepo
+  interface SpaceRepo
 }
 
 ' =========================
@@ -100,12 +116,15 @@ package "Mapper" {
 
 ' Controller -> Service
 ParkingController --> ParkingService
+SpaceController --> SpaceService
 
 ' Service -> Repo
 ParkingService --> ParkingRepo
+SpaceService --> SpaceRepo
 
 ' Service -> Mapper
 ParkingService --> ParkingMapper
+SpaceService --> SpaceMapper
 
 ' Mapper -> Entity / DTO
 ParkingMapper --> Parking
