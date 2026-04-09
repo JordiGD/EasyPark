@@ -122,7 +122,7 @@ xxxxxxxxxx     easypark-admin-app       Up X seconds
 |-----------|-----|--------------|-----|
 | **Owner App** | http://localhost:3000 | owner@easypark.com / password123 | Propietario |
 | **Admin App** | http://localhost:3001 | admin@easypark.com / password123 | Administrador |
-| **Driver App** | `flutter run` | driver@easypark.com / password123 | Conductor |
+| **Driver App** | `flutter run -d chrome` | driver@easypark.com / password123 | Conductor |
 
 ### Backend Services
 

@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS owner (
   INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+INSERT INTO user (name, phone_number, email, password, role) VALUES
+('Default ADMIN', '1234567890', 'admin@easypark.com', 'password123', 'admin');
+INSERT INTO user (name, phone_number, email, password, role) VALUES
+('Default DRIVER', '1234567890', 'driver@easypark.com', 'password123', 'driver');
+INSERT INTO user (name, phone_number, email, password, role) VALUES
+('Default OWNER', '1234567890', 'owner@easypark.com', 'password123', 'owner');
 
 -- ==================== CREAR BASE DE DATOS PARKING (PARKING SERVICE) ====================
 CREATE DATABASE IF NOT EXISTS parking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
