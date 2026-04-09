@@ -8,13 +8,44 @@ class DriverProvider extends ChangeNotifier {
   List<Driver> _drivers = [];
   bool _isLoading = false;
   String? _errorMessage;
+  int? _lastUserID;
+  Map<String, dynamic>? _currentUser;
 
   // Getters
   List<Driver> get drivers => _drivers;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  int? get lastUserID => _lastUserID;
+  Map<String, dynamic>? get currentUser => _currentUser;
 
-  // Guardar conductor
+  // Guardar usuario actual después del login
+  void setCurrentUser(Map<String, dynamic> userInfo) {
+    _currentUser = userInfo;
+    _lastUserID = userInfo['userID'];
+    notifyListeners();
+  }
+
+  // Guardar usuario (primera fase del registro)
+  Future<bool> saveUser(Map<String, dynamic> userData) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _driverService.saveUser(userData);
+      _lastUserID = result['userID'];
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Guardar conductor (legacy - mantener para compatibilidad)
   Future<bool> saveDriver(Driver driver) async {
     _isLoading = true;
     _errorMessage = null;

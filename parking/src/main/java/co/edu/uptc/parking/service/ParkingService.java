@@ -10,23 +10,31 @@ import org.springframework.stereotype.Service;
 import co.edu.uptc.parking.Mapper.ParkingMapper;
 import co.edu.uptc.parking.dto.ParkingDTO;
 import co.edu.uptc.parking.entity.Parking;
+import co.edu.uptc.parking.entity.Space;
 import co.edu.uptc.parking.repo.ParkingRepo;
+import co.edu.uptc.parking.repo.SpaceRepo;
 
 @Service
 public class ParkingService {
 
     @Autowired
     private ParkingRepo parkingRepo;
+    
+    @Autowired
+    private SpaceRepo spaceRepo;
+    
+    @Autowired
+    private ParkingMapper parkingMapper;
 
     public ParkingDTO saveParking(ParkingDTO parkingDTO) {
-        Parking parking = ParkingMapper.INSTANCE.toEntity(parkingDTO);
+        Parking parking = parkingMapper.toEntity(parkingDTO);
         Parking savedParking = parkingRepo.save(parking);
-        return ParkingMapper.INSTANCE.toDTO(savedParking);
+        return enrichParkingDTO(parkingMapper.toDTO(savedParking));
     }
 
     public ParkingDTO getParkingById(Long id) {
         Optional<Parking> parking = parkingRepo.findById(id);
-        return parking.map(ParkingMapper.INSTANCE::toDTO).orElse(null);
+        return parking.map(p -> enrichParkingDTO(parkingMapper.toDTO(p))).orElse(null);
     }
 
     public boolean getStatusParkingById(Long id) {
@@ -48,7 +56,7 @@ public class ParkingService {
             parking.setLongitude(parkingDTO.getLongitude());
             
             Parking updatedParking = parkingRepo.save(parking);
-            return ParkingMapper.INSTANCE.toDTO(updatedParking);
+            return enrichParkingDTO(parkingMapper.toDTO(updatedParking));
         }
         
         return null;
@@ -58,15 +66,35 @@ public class ParkingService {
         List<Parking> parkings = parkingRepo.findAll();
         return parkings.stream()
                 .filter(parking -> parking.getOwnerId().equals(ownerId))
-                .map(ParkingMapper.INSTANCE::toDTO)
+                .map(p -> enrichParkingDTO(parkingMapper.toDTO(p)))
                 .collect(Collectors.toList());
     }
 
     public List<ParkingDTO> getAllParkings() {
         List<Parking> parkings = parkingRepo.findAll();
         return parkings.stream()
-                .map(ParkingMapper.INSTANCE::toDTO)
+                .map(p -> enrichParkingDTO(parkingMapper.toDTO(p)))
                 .collect(Collectors.toList());
+    }
+    
+    // Enriquecer DTO con conteo de espacios dinámico
+    private ParkingDTO enrichParkingDTO(ParkingDTO dto) {
+        if (dto.getId() == null) {
+            dto.setTotalSpaces(0L);
+            dto.setOccupiedSpaces(0L);
+            return dto;
+        }
+        
+        List<Space> spaces = spaceRepo.findByParkingId(dto.getId());
+        long totalSpaces = spaces.size();
+        long occupiedSpaces = spaces.stream()
+                .filter(s -> "OCCUPIED".equals(s.getStatus()))
+                .count();
+        
+        dto.setTotalSpaces(totalSpaces);
+        dto.setOccupiedSpaces(occupiedSpaces);
+        
+        return dto;
     }
     
 }

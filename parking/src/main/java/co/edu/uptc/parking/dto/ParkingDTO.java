@@ -17,5 +17,7 @@ public class ParkingDTO {
     private boolean availability;
     private double latitude;
     private double longitude;
+    private Long totalSpaces;
+    private Long occupiedSpaces;
     
 }

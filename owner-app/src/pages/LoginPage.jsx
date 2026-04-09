@@ -18,11 +18,20 @@ export default function LoginPage() {
 
     try {
       const response = await userService.login(email, password);
-      localStorage.setItem('token', response.data.token || 'auth-token');
-      localStorage.setItem('user', JSON.stringify(response.data));
-      navigate('/dashboard');
+      
+      // Validar respuesta "Login successful"
+      if (response.data === 'Login successful') {
+        // Obtener los datos completos del usuario
+        const userResponse = await userService.getUserByEmail(email);
+        localStorage.setItem('user', JSON.stringify(userResponse.data));
+        localStorage.setItem('email', email);
+        localStorage.setItem('isAuthenticated', 'true');
+        navigate('/dashboard');
+      } else {
+        setError('Respuesta inesperada del servidor');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Email o contraseña incorrectos');
+      setError(err.response?.data || 'Email o contraseña incorrectos');
     } finally {
       setLoading(false);
     }

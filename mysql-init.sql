@@ -32,27 +32,6 @@ CREATE TABLE IF NOT EXISTS owner (
   INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ==================== DATOS DE PRUEBA USER SERVICE ====================
-
--- Crear usuario admin
-INSERT INTO user (name, phone_number, email, password, role, created_at) VALUES
-('Admin Sistema', '+57 3001234567', 'admin@easypark.com', '$2a$10$slYQmyNdGzin7olVN8/eZulDW3KjBQwXKP0RhHGmHlWNVzwVvCxo2', 'ADMIN', NOW());
-
--- Crear usuario propietario
-INSERT INTO user (name, phone_number, email, password, role, created_at) VALUES
-('Juan Propietario', '+57 3002234567', 'owner@easypark.com', '$2a$10$slYQmyNdGzin7olVN8/eZulDW3KjBQwXKP0RhHGmHlWNVzwVvCxo2', 'OWNER', NOW());
-
--- Crear usuario conductor
-INSERT INTO user (name, phone_number, email, password, role, created_at) VALUES
-('Carlos Conductor', '+57 3003234567', 'driver@easypark.com', '$2a$10$slYQmyNdGzin7olVN8/eZulDW3KjBQwXKP0RhHGmHlWNVzwVvCxo2', 'DRIVER', NOW());
-
--- Crear registro de conductor (owner user_id=3)
-INSERT INTO driver (user_id, vehicule, plate) VALUES
-(3, 'Toyota Corolla', 'ABC-1234');
-
--- Crear registro de propietario (owner user_id=2)
-INSERT INTO owner (user_id) VALUES
-(2);
 
 -- ==================== CREAR BASE DE DATOS PARKING (PARKING SERVICE) ====================
 CREATE DATABASE IF NOT EXISTS parking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -87,19 +66,6 @@ CREATE TABLE IF NOT EXISTS space (
   INDEX idx_status (status),
   UNIQUE KEY unique_space (parking_id, space_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ==================== DATOS DE PRUEBA PARKING SERVICE ====================
-
--- Insertar estacionamiento de prueba (propietario con owner_id=2)
-INSERT INTO parking (owner_id, name, address, price_per_hour, availability, latitude, longitude) VALUES
-(2, 'Parqueadero Centro Plus', 'Calle 10 #5-50, Bogotá', 5000.00, TRUE, 4.7169, -74.0704);
-
--- Insertar espacios de prueba
-INSERT INTO space (parking_id, space_number, status) VALUES
-(1, 'SPACE-1-001', 'AVAILABLE'),
-(1, 'SPACE-1-002', 'AVAILABLE'),
-(1, 'SPACE-1-003', 'OCCUPIED'),
-(1, 'SPACE-1-004', 'AVAILABLE');
 
 -- ==================== CREDENCIALES Y PRIVILEGIOS ====================
 

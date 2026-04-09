@@ -38,12 +38,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final service = DriverService();
-      final success = await service.login(
+      final userInfo = await service.login(
         _emailController.text,
         _passwordController.text,
       );
 
-      if (success && mounted) {
+      if (userInfo != null && mounted) {
+        // Guardar información del usuario incluyendo userID
+        context.read<DriverProvider>().setCurrentUser(userInfo);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('✓ Login exitoso')));

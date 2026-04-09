@@ -11,7 +11,6 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     phone: '',
-    companyName: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +40,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { confirmPassword, ...userData } = formData;
+      // Construir objeto UserDTO con el formato que espera el backend
+      const userData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phone,
+        role: 'OWNER', // Role por defecto para propietarios
+      };
+      
       await userService.register(userData);
       
       // Redirigir a login después del registro exitoso
@@ -93,20 +100,6 @@ export default function RegisterPage() {
                 required
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="companyName">Nombre de la Empresa</label>
-            <input
-              id="companyName"
-              type="text"
-              name="companyName"
-              placeholder="Mi Parqueadero"
-              value={formData.companyName}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
           </div>
 
           <div className="form-group">

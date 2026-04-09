@@ -18,16 +18,23 @@ public class DriverService {
     private DriverMapper driverMapper;
 
     public DriverDTO saveVehicule(DriverDTO driverDTO) {
-        Driver driver = driverMapper.toEntity(driverDTO);
+        Driver driver = driverRepo.findByUserID(driverDTO.getUserID())
+                .orElseGet(() -> {
+                    Driver newDriver = new Driver();
+                    newDriver.setUserID(driverDTO.getUserID());
+                    return newDriver;
+                });
+        
+        driver.setVehicule(driverDTO.getVehicule());
+        driver.setPlate(driverDTO.getPlate());
         Driver savedDriver = driverRepo.save(driver);
         return driverMapper.toDTO(savedDriver);
     }
 
     public DriverDTO updateVehicule(DriverDTO driverDTO) {
-        Driver existingDriver = driverRepo.findById(driverDTO.getDriverID())
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        Driver existingDriver = driverRepo.findByUserID(driverDTO.getUserID())
+                .orElseThrow(() -> new RuntimeException("Driver no encontrado para el usuario"));
 
-        existingDriver.setUserID(driverDTO.getUserID());
         existingDriver.setVehicule(driverDTO.getVehicule());
         existingDriver.setPlate(driverDTO.getPlate());
 

@@ -20,7 +20,7 @@ public class DriverController {
     private DriverService driverService;
 
     @PostMapping("/saveVehicule")
-    public ResponseEntity<DriverDTO> saveVehicule(@RequestBody DriverDTO driverDTO){
+    public ResponseEntity<DriverDTO> saveVehicule(@RequestBody DriverDTO driverDTO) {
         DriverDTO savedDriver = driverService.saveVehicule(driverDTO);
         return new ResponseEntity<>(savedDriver, HttpStatus.OK);
     }

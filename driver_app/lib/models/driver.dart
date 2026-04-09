@@ -1,5 +1,5 @@
 class Driver {
-  final long? driverID;
+  final int? driverID;
   final String name;
   final String phoneNumber;
   final String email;
@@ -37,7 +37,7 @@ class Driver {
 
   // Copiar con cambios
   Driver copyWith({
-    long? driverID,
+    int? driverID,
     String? name,
     String? phoneNumber,
     String? email,

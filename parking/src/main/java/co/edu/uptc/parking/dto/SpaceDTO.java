@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SpaceDTO {
     
-    private Long spaceId;
+    private Long id;
     private Long parkingId;
     private String spaceNumber;
     private String status;

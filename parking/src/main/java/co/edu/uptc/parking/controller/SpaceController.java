@@ -30,13 +30,16 @@ public class SpaceController {
         return new ResponseEntity<>(spaceDTO, HttpStatus.CREATED);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<SpaceDTO>> getSpaces() {
+        List<SpaceDTO> spaces = spaceService.getSpaces();
+        return new ResponseEntity<>(spaces, HttpStatus.OK);
+    }
+
     @GetMapping("/parking/{parkingId}")
     public ResponseEntity<List<SpaceDTO>> getSpacesByParkingId(@PathVariable Long parkingId) {
         List<SpaceDTO> spaces = spaceService.getSpacesByParkingId(parkingId);
-        if (!spaces.isEmpty()) {
-            return new ResponseEntity<>(spaces, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(spaces, HttpStatus.OK);
     }
 
     @GetMapping("/{spaceId}/status")

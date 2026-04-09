@@ -70,6 +70,11 @@ export const userService = {
     return api.post('/user/login', { email, password });
   },
 
+  // Obtener usuario por email
+  getUserByEmail: (email) => {
+    return api.get(`/user/email/${email}`);
+  },
+
   // Actualizar perfil
   updateProfile: (userData) => {
     return api.post('/user/updateUser', userData);
@@ -113,9 +118,18 @@ export const parkingService = {
 // ==================== SPACE ENDPOINTS ====================
 
 export const spaceService = {
-  // Crear espacio en parqueadero
-  createSpace: (parkingId, spaceData) => {
-    return parkingApi.post(`/api/spaces/create/${parkingId}`, spaceData);
+  // Crear espacio individual
+  createSpace: (parkingId) => {
+    return parkingApi.post(`/api/spaces/create/${parkingId}`);
+  },
+
+  // Crear múltiples espacios para un parqueadero
+  createMultipleSpaces: (parkingId, quantity) => {
+    const promises = [];
+    for (let i = 0; i < quantity; i++) {
+      promises.push(parkingApi.post(`/api/spaces/create/${parkingId}`));
+    }
+    return Promise.all(promises);
   },
 
   // Obtener espacios de un parqueadero

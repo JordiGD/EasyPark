@@ -33,34 +33,37 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
 
   void _submitForm(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      final driver = Driver(
-        name: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final userData = {
+        'name': _nameController.text.trim(),
+        'phoneNumber': _phoneController.text.trim(),
+        'email': _emailController.text.trim(),
+        'password': _passwordController.text,
+        'role': 'DRIVER',
+      };
 
-      context.read<DriverProvider>().saveDriver(driver).then((success) {
+      context.read<DriverProvider>().saveUser(userData).then((success) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('¡Conductor registrado exitosamente!'),
+              content: Text(
+                  '¡Usuario registrado exitosamente! Por favor inicia sesión'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 2),
             ),
           );
           _clearForm();
-          // Navegar a la pantalla de lista de conductores después de 1 segundo
+          // Navegar a la pantalla de login
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
-              Navigator.of(context).pushNamed('/drivers-list');
+              Navigator.of(context).pushReplacementNamed('/login');
             }
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.read<DriverProvider>().errorMessage ?? 'Error desconocido',
+                context.read<DriverProvider>().errorMessage ??
+                    'Error desconocido',
               ),
               backgroundColor: Colors.red,
             ),
@@ -229,17 +232,6 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // Botón Ver Lista
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/drivers-list');
-                  },
-                  child: const Text(
-                    'Ver Lista de Conductores',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
               ],
             ),
           ),

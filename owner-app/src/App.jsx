@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ParkingFormPage from './pages/ParkingFormPage';
+import UserProfilePage from './pages/UserProfilePage';
 import './App.css';
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/parkings/new" element={<ParkingFormPage />} />
         <Route path="/parkings" element={<DashboardPage />} />
-        <Route path="/profile" element={<DashboardPage />} />
+        <Route path="/profile" element={<UserProfilePage />} />
 
         {/* Default Route */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

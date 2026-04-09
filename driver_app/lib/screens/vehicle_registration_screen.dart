@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
 import '../services/driver_service.dart';
 import '../widgets/custom_text_field.dart';
+import '../providers/driver_provider.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
-  final Map<String, dynamic> driverData;
-
-  const VehicleRegistrationScreen({Key? key, required this.driverData})
-    : super(key: key);
+  const VehicleRegistrationScreen({Key? key}) : super(key: key);
 
   @override
   State<VehicleRegistrationScreen> createState() =>
@@ -15,25 +15,47 @@ class VehicleRegistrationScreen extends StatefulWidget {
 
 class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _licenseController = TextEditingController();
-  final _brandController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _colorController = TextEditingController();
-  final _yearController = TextEditingController();
-  final _seatsController = TextEditingController();
+  final _vehicleTypeController = TextEditingController();
+  final _plateController = TextEditingController();
+
+  late int _userID;
+  bool _userIDLoaded = false;
 
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_userIDLoaded) {
+      // Obtener el userID de los argumentos (si viene de registro)
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is int) {
+        _userID = args;
+      } else {
+        // Si no viene de argumentos, obtener del provider (usuario logueado)
+        final provider = context.read<DriverProvider>();
+        _userID = provider.lastUserID ?? 0;
+        // Si aún no hay userID, intentar obtener del localStorage del driver logueado
+        if (_userID == 0) {
+          _errorMessage =
+              'No se pudo identificar el usuario. Por favor inicia sesión de nuevo.';
+        }
+      }
+      _userIDLoaded = true;
+    }
+  }
+
+  @override
   void dispose() {
-    _licenseController.dispose();
-    _brandController.dispose();
-    _modelController.dispose();
-    _colorController.dispose();
-    _yearController.dispose();
-    _seatsController.dispose();
+    _vehicleTypeController.dispose();
+    _plateController.dispose();
     super.dispose();
   }
 
@@ -48,14 +70,9 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
     try {
       final vehicleData = {
-        'license': _licenseController.text,
-        'brand': _brandController.text,
-        'model': _modelController.text,
-        'color': _colorController.text,
-        'year': int.parse(_yearController.text),
-        'seats': int.parse(_seatsController.text),
-        // Añadir datos del conductor
-        ...widget.driverData,
+        'userID': _userID,
+        'vehicule': _vehicleTypeController.text.trim(),
+        'plate': _plateController.text.trim(),
       };
 
       final service = DriverService();
@@ -91,38 +108,42 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Header Info
-              Card(
-                elevation: 0,
-                color: Colors.blue[50],
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Información del Vehículo',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Completa todos los datos de tu vehículo',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 20),
+              const Icon(
+                Icons.directions_car,
+                size: 80,
+                color: Colors.blue,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Registrar Vehículo',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
+
+              // Vehicle Type
+              CustomTextField(
+                controller: _vehicleTypeController,
+                label: 'Tipo de Vehículo',
+                hint: 'Ej. Auto, Moto, Camioneta',
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'El tipo de vehículo es requerido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
 
               // License Plate
               CustomTextField(
-                controller: _licenseController,
+                controller: _plateController,
                 label: 'Placa del Vehículo',
                 hint: 'ABC-1234',
-                icon: Icons.directions_car,
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
                     return 'La placa es requerida';
@@ -130,170 +151,49 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-
-              // Brand
-              CustomTextField(
-                controller: _brandController,
-                label: 'Marca',
-                hint: 'Toyota, Hyundai, etc.',
-                icon: Icons.factory,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'La marca es requerida';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Model
-              CustomTextField(
-                controller: _modelController,
-                label: 'Modelo',
-                hint: 'Corolla, i10, etc.',
-                icon: Icons.model_training,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'El modelo es requerido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Color
-              CustomTextField(
-                controller: _colorController,
-                label: 'Color',
-                hint: 'Negro, Blanco, etc.',
-                icon: Icons.palette,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'El color es requerido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Year and Seats in Row
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _yearController,
-                      label: 'Año',
-                      hint: '2023',
-                      icon: Icons.calendar_today,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Requerido';
-                        }
-                        final year = int.tryParse(value ?? '');
-                        if (year == null || year < 1980 || year > 2100) {
-                          return 'Año inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _seatsController,
-                      label: 'Asientos',
-                      hint: '4',
-                      icon: Icons.event_seat,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Requerido';
-                        }
-                        final seats = int.tryParse(value ?? '');
-                        if (seats == null || seats < 1 || seats > 9) {
-                          return 'Inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Error Message
-              if (_errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red[700], fontSize: 12),
-                  ),
-                ),
-
-              // Success Message
-              if (_successMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green),
-                  ),
-                  child: Text(
-                    _successMessage!,
-                    style: TextStyle(color: Colors.green[700], fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               // Register Button
-              ElevatedButton(
-                onPressed: _isLoading ? null : _registerVehicle,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Registrar Vehículo',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+              Consumer<DriverProvider>(
+                builder: (context, provider, _) {
+                  return ElevatedButton(
+                    onPressed: _isLoading ? null : _registerVehicle,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Registrar Vehículo',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                  );
+                },
               ),
+
               const SizedBox(height: 16),
 
-              // Skip Button
+              // Skip Registration Button
               TextButton(
                 onPressed: _isLoading
                     ? null
                     : () {
-                        Navigator.of(
-                          context,
-                        ).pushReplacementNamed('/drivers-list');
+                        Navigator.of(context)
+                            .pushReplacementNamed('/drivers-list');
                       },
-                child: const Text('Omitir por ahora'),
+                child: const Text(
+                  'Completar después',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),

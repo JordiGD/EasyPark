@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/driver_provider.dart';
+import 'providers/parking_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/driver_registration_screen.dart';
 import 'screens/drivers_list_screen.dart';
 import 'screens/vehicle_registration_screen.dart';
 import 'screens/user_profile_screen.dart';
+import 'screens/parking_detail_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +19,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => DriverProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => DriverProvider()),
+        ChangeNotifierProvider(create: (_) => ParkingProvider()),
+      ],
       child: MaterialApp(
         title: 'EasyPark - Conductores',
         theme: ThemeData(
@@ -57,8 +62,10 @@ class MyApp extends StatelessWidget {
         routes: {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const DriverRegistrationScreen(),
+          '/vehicle-register': (context) => const VehicleRegistrationScreen(),
           '/drivers-list': (context) => const DriversListScreen(),
           '/profile': (context) => const UserProfileScreen(),
+          '/parking-detail': (context) => const ParkingDetailScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

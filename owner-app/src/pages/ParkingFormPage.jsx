@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ownerService } from '../services/api';
+import { parkingService } from '../services/api';
 import './ParkingForm.css';
 
 export default function ParkingFormPage() {
@@ -51,7 +51,7 @@ export default function ParkingFormPage() {
         pricePerDay: parseFloat(formData.pricePerDay),
       };
 
-      await ownerService.saveParking(parkingData);
+      await parkingService.createParking(parkingData);
       setSuccess('✓ Parqueadero registrado exitosamente');
 
       setTimeout(() => {
