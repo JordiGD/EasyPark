@@ -393,21 +393,21 @@ export default function DashboardPage() {
 
                   <div className="parking-info">
                     <div className="info-item">
-                      <span className="info-label">📍 Dirección:</span>
+                      <span className="info-label"> Dirección:</span>
                       <span className="info-value">{parking.address}</span>
                     </div>
                     <div className="info-item">
-                      <span className="info-label">💰 Precio/Hora:</span>
+                      <span className="info-label"> Precio/Hora:</span>
                       <span className="info-value">${parking.pricePerHour}</span>
                     </div>
                     <div className="info-item">
-                      <span className="info-label">✓ Estado:</span>
+                      <span className="info-label"> Estado:</span>
                       <span className="info-value">
                         {parking.availability ? '🟢 Activo' : '🔴 Inactivo'}
                       </span>
                     </div>
                     <div className="info-item">
-                      <span className="info-label">🅿️ Espacios:</span>
+                      <span className="info-label"> Espacios:</span>
                       <span className="info-value">{spaceCounts[parking.id] || 0}</span>
                     </div>
                   </div>

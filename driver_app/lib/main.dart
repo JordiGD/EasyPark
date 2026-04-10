@@ -8,6 +8,7 @@ import 'screens/drivers_list_screen.dart';
 import 'screens/vehicle_registration_screen.dart';
 import 'screens/user_profile_screen.dart';
 import 'screens/parking_detail_screen.dart';
+import 'screens/edit_user_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
           '/drivers-list': (context) => const DriversListScreen(),
           '/profile': (context) => const UserProfileScreen(),
           '/parking-detail': (context) => const ParkingDetailScreen(),
+          '/edit-user': (context) => const EditUserScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),
