@@ -4,12 +4,12 @@ services:
     image: mysql:8.0
     container_name: easypark-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: easypark_db
-      MYSQL_USER: easypark_user
-      MYSQL_PASSWORD: easypark_pass123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -27,17 +27,17 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://dbUser:3306/easypark_db
-      SPRING_DATASOURCE_USERNAME: easypark_user
-      SPRING_DATASOURCE_PASSWORD: easypark_pass123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: 'false'
-      SERVER_PORT: 8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_USER}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
       EUREKA_INSTANCE_HOSTNAME: user-service
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT_USER}:${SERVER_PORT_USER}"
     depends_on:
       dbUser:
         condition: service_healthy
@@ -53,12 +53,12 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-eureka
     environment:
-      SERVER_PORT: 8761
+      SERVER_PORT: ${EUREKA_PORT}
       EUREKA_CLIENT_REGISTER_WITH_EUREKA: 'false'
       EUREKA_CLIENT_FETCH_REGISTRY: 'false'
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
     ports:
-      - "8761:8761"
+      - "${EUREKA_PORT}:${EUREKA_PORT}"
     networks:
       - easypark-network
     healthcheck:
@@ -74,18 +74,18 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-parking
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://dbUser:3306/parking_db
-      SPRING_DATASOURCE_USERNAME: parking_user
-      SPRING_DATASOURCE_PASSWORD: parking_pass123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: 'false'
-      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${PARKING_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${PARKING_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PARKING_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_PARKING}
       SPRING_APPLICATION_NAME: parking-service
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: 'true'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
       EUREKA_INSTANCE_HOSTNAME: parking-service
     ports:
-      - "8081:8081"
+      - "${SERVER_PORT_PARKING}:${SERVER_PORT_PARKING}"
     depends_on:
       dbUser:
         condition: service_healthy
@@ -101,10 +101,10 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-owner-app
     environment:
-      REACT_APP_API_URL: http://localhost:8080
-      PORT: 3000
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      PORT: ${OWNER_APP_PORT}
     ports:
-      - "3000:3000"
+      - "${OWNER_APP_PORT}:${OWNER_APP_PORT}"
     depends_on:
       - backend
     networks:
@@ -119,10 +119,10 @@ services:
       dockerfile: Dockerfile
     container_name: easypark-admin-app
     environment:
-      REACT_APP_API_URL: http://localhost:8080
-      PORT: 3001
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      PORT: ${ADMIN_APP_PORT}
     ports:
-      - "3001:3001"
+      - "${ADMIN_APP_PORT}:${ADMIN_APP_PORT}"
     depends_on:
       - backend
     networks:
