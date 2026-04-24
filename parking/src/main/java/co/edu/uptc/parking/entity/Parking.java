@@ -40,4 +40,13 @@ public class Parking {
     @Column(name = "longitude")
     private double longitude;
     
+    @Column(name = "city")
+    private String city;
+    
+    @Column(name = "department")
+    private String department;
+    
+    @Column(name = "country")
+    private String country;
+    
 }

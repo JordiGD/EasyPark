@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import co.edu.uptc.parking.Mapper.ParkingMapper;
 import co.edu.uptc.parking.dto.ParkingDTO;
+import co.edu.uptc.parking.dto.CreateParkingRequest;
 import co.edu.uptc.parking.entity.Parking;
 import co.edu.uptc.parking.entity.Space;
 import co.edu.uptc.parking.repo.ParkingRepo;
@@ -81,20 +82,29 @@ class ParkingServiceTests {
     @Test
     void testSaveParkingSuccess() {
         // Arrange
+        CreateParkingRequest request = new CreateParkingRequest();
+        request.setOwnerId(100L);
+        request.setName("Parking Central");
+        request.setAddress("Calle Principal 123");
+        request.setCity("Tunja");
+        request.setDepartment("Boyacá");
+        request.setCountry("CO");
+        request.setPricePerHour(5000.0);
+        request.setAvailability(true);
+        
         when(parkingMapper.toEntity(any(ParkingDTO.class))).thenReturn(testParking);
         when(parkingRepo.save(any(Parking.class))).thenReturn(testParking);
         when(parkingMapper.toDTO(any(Parking.class))).thenReturn(testParkingDTO);
         when(spaceRepo.findByParkingId(anyLong())).thenReturn(testSpaces);
 
         // Act
-        ParkingDTO result = parkingService.saveParking(testParkingDTO);
+        ParkingDTO result = parkingService.saveParking(request);
 
         // Assert
         assertNotNull(result);
         assertEquals(testParkingDTO.getId(), result.getId());
         assertEquals(testParkingDTO.getName(), result.getName());
         verify(parkingRepo, times(1)).save(any(Parking.class));
-        verify(parkingMapper, times(1)).toEntity(any(ParkingDTO.class));
     }
 
     @Test

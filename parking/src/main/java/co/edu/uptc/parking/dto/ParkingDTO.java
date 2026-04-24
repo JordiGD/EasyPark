@@ -19,5 +19,8 @@ public class ParkingDTO {
     private double longitude;
     private Long totalSpaces;
     private Long occupiedSpaces;
+    private String city;
+    private String department;
+    private String country;
     
 }

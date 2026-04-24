@@ -83,4 +83,32 @@ GRANT ALL PRIVILEGES ON easypark_db.* TO 'easypark_user'@'%';
 CREATE USER IF NOT EXISTS 'parking_user'@'%' IDENTIFIED BY 'parking_pass123';
 GRANT ALL PRIVILEGES ON parking_db.* TO 'parking_user'@'%';
 
+-- Usuario para Reservation Service (reservation_db)
+CREATE USER IF NOT EXISTS 'reservation_user'@'%' IDENTIFIED BY 'reservation_pass123';
+GRANT ALL PRIVILEGES ON reservation_db.* TO 'reservation_user'@'%';
+CREATE DATABASE IF NOT EXISTS reservation_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE reservation_db;
+
+-- Tabla: reservation (Reservas de Espacios de Parqueo)
+CREATE TABLE IF NOT EXISTS reservation (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  driver_id BIGINT NOT NULL,
+  space_id BIGINT NOT NULL,
+  parking_id BIGINT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+  start_time DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_driver_id (driver_id),
+  INDEX idx_space_id (space_id),
+  INDEX idx_parking_id (parking_id),
+  INDEX idx_status (status),
+  INDEX idx_start_time (start_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Usuario para Reservation Service (reservation_db)
+CREATE USER IF NOT EXISTS 'reservation_user'@'%' IDENTIFIED BY 'reservation_pass123';
+GRANT ALL PRIVILEGES ON reservation_db.* TO 'reservation_user'@'%';
+
 FLUSH PRIVILEGES;

@@ -23,7 +23,9 @@ class _ParkingDetailScreenState extends State<ParkingDetailScreen> {
   void initState() {
     super.initState();
     _driverService = DriverService();
-    _loadSpaces();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSpaces();
+    });
   }
 
   Future<void> _loadSpaces() async {

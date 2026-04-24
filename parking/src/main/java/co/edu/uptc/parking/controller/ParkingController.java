@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.edu.uptc.parking.dto.ParkingDTO;
+import co.edu.uptc.parking.dto.CreateParkingRequest;
 import co.edu.uptc.parking.service.ParkingService;
 
 @RestController
@@ -24,9 +26,16 @@ public class ParkingController {
     private ParkingService parkingService;
 
     @PostMapping
-    public ResponseEntity<ParkingDTO> createParking(@RequestBody ParkingDTO parkingDTO) {
-        ParkingDTO createdParking = parkingService.saveParking(parkingDTO);
-        return new ResponseEntity<>(createdParking, HttpStatus.CREATED);
+    public ResponseEntity<?> createParking(@RequestBody CreateParkingRequest request) {
+        try {
+            ParkingDTO createdParking = parkingService.saveParking(request);
+            return new ResponseEntity<>(createdParking, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                    new ErrorResponse("Error de validación", e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
     }
 
     @GetMapping("/{id}")
@@ -54,18 +63,40 @@ public class ParkingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ParkingDTO> updateParking(@PathVariable Long id, @RequestBody ParkingDTO parkingDTO) {
-        ParkingDTO updatedParking = parkingService.updateParking(id, parkingDTO);
-        if (updatedParking != null) {
-            return new ResponseEntity<>(updatedParking, HttpStatus.OK);
+    public ResponseEntity<?> updateParking(@PathVariable Long id, @RequestBody ParkingDTO parkingDTO) {
+        try {
+            ParkingDTO updatedParking = parkingService.updateParking(id, parkingDTO);
+            if (updatedParking != null) {
+                return new ResponseEntity<>(updatedParking, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                    new ErrorResponse("Error de geocodificación", e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/{id}/status")
     public ResponseEntity<Boolean> getStatusParkingById(@PathVariable Long id) {
         boolean status = parkingService.getStatusParkingById(id);
         return new ResponseEntity<>(status, HttpStatus.OK);
+    }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<List<ParkingDTO>> getParkingsNearby(
+            @RequestParam double latitude,
+            @RequestParam double longitude,
+            @RequestParam(defaultValue = "5") double radiusKm) {
+        List<ParkingDTO> parkings = parkingService.getParkingsNearby(latitude, longitude, radiusKm);
+        return new ResponseEntity<>(parkings, HttpStatus.OK);
+    }
+
+    @GetMapping("/map/all")
+    public ResponseEntity<List<ParkingDTO>> getAllParkingsForMap() {
+        List<ParkingDTO> parkings = parkingService.getAllParkings();
+        return new ResponseEntity<>(parkings, HttpStatus.OK);
     }
 
 }

@@ -87,4 +87,13 @@ class DriverProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+
+  // Logout - limpiar datos del usuario
+  void logout() {
+    _currentUser = null;
+    _lastUserID = null;
+    _drivers = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
 }

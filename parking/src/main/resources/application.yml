@@ -21,3 +21,8 @@ spring:
         hibernate:
             ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
         show-sql: ${SPRING_JPA_SHOW_SQL:false}
+
+geocoding:
+    api-key: ${GOOGLE_MAPS_API_KEY:}
+    provider: google-maps
+    timeout: 5000

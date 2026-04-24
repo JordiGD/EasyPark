@@ -84,8 +84,36 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
       EUREKA_INSTANCE_HOSTNAME: parking-service
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
     ports:
       - "${SERVER_PORT_PARKING}:${SERVER_PORT_PARKING}"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
+  # ==================== RESERVATION SERVICE (Spring Boot Microservice) ====================
+  reservation-service:
+    build:
+      context: ./reservation
+      dockerfile: Dockerfile
+    container_name: easypark-reservation
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${RESERVATION_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${RESERVATION_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${RESERVATION_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_RESERVATION}
+      SPRING_APPLICATION_NAME: reservation-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
+      EUREKA_INSTANCE_HOSTNAME: reservation-service
+    ports:
+      - "${SERVER_PORT_RESERVATION}:${SERVER_PORT_RESERVATION}"
     depends_on:
       dbUser:
         condition: service_healthy
@@ -109,8 +137,6 @@ services:
       - backend
     networks:
       - easypark-network
-    volumes:
-      - ./owner-app/src:/app/src
 
   # ==================== ADMIN APP (React) ====================
   admin-app:
@@ -127,8 +153,7 @@ services:
       - backend
     networks:
       - easypark-network
-    volumes:
-      - ./admin-app/src:/app/src
+
 
   # ==================== NGINX (Proxy Reverso - Opcional) ====================
   nginx:
@@ -143,6 +168,7 @@ services:
     depends_on:
       - backend
       - parking-service
+      - reservation-service
       - owner-app
       - admin-app
       - eureka

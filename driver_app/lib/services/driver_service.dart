@@ -311,4 +311,88 @@ class DriverService {
       throw Exception('Error de conexión: $e');
     }
   }
+
+  // ==================== RESERVATION ENDPOINTS ====================
+
+  /// Crear nueva reserva
+  /// URL: http://localhost:8082/api/reservations
+  Future<Map<String, dynamic>> createReservation({
+    required int driverId,
+    required int spaceId,
+    required int parkingId,
+    required DateTime startTime,
+  }) async {
+    try {
+      final reservationData = {
+        'driverId': driverId,
+        'spaceId': spaceId,
+        'parkingId': parkingId,
+        'startTime': startTime.toIso8601String(),
+      };
+
+      final response = await http
+          .post(
+            Uri.parse('http://localhost:8082/api/reservations'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(reservationData),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Error al crear reserva: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en createReservation: $e');
+    }
+  }
+
+  /// Obtener reservas activas de un conductor
+  Future<List<Map<String, dynamic>>> getActiveReservations(int driverId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'http://localhost:8082/api/reservations/driver/$driverId/active'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Error al obtener reservas');
+      }
+    } catch (e) {
+      throw Exception('Error en getActiveReservations: $e');
+    }
+  }
+
+  /// Cancelar una reserva
+  Future<Map<String, dynamic>> cancelReservation(int reservationId) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+            'http://localhost:8082/api/reservations/$reservationId/cancel'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Error al cancelar reserva: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en cancelReservation: $e');
+    }
+  }
 }

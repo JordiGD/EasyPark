@@ -5,6 +5,8 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ParkingFormPage from './pages/ParkingFormPage';
 import UserProfilePage from './pages/UserProfilePage';
+import SpacesPage from './pages/SpacesPage';
+import TestSelectPage from './pages/TestSelectPage';
 import './App.css';
 
 function App() {
@@ -15,9 +17,14 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
+        {/* Debug Routes */}
+        <Route path="/test-select" element={<TestSelectPage />} />
+
         {/* Protected Routes */}
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/parkings/new" element={<ParkingFormPage />} />
+        <Route path="/parkings/:parkingId/edit" element={<ParkingFormPage />} />
+        <Route path="/parkings/:parkingId/spaces" element={<SpacesPage />} />
         <Route path="/parkings" element={<DashboardPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
 

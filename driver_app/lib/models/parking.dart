@@ -8,6 +8,8 @@ class Parking {
   final int totalSpaces;
   final int occupiedSpaces;
   final double pricePerHour;
+  final double latitude;
+  final double longitude;
 
   Parking({
     this.id,
@@ -19,6 +21,8 @@ class Parking {
     required this.totalSpaces,
     required this.occupiedSpaces,
     required this.pricePerHour,
+    required this.latitude,
+    required this.longitude,
   });
 
   // Convertir JSON a Parking
@@ -33,6 +37,8 @@ class Parking {
       totalSpaces: json['totalSpaces'] ?? 0,
       occupiedSpaces: json['occupiedSpaces'] ?? 0,
       pricePerHour: (json['pricePerHour'] ?? 0).toDouble(),
+      latitude: (json['latitude'] ?? 0.0).toDouble(),
+      longitude: (json['longitude'] ?? 0.0).toDouble(),
     );
   }
 
@@ -48,6 +54,8 @@ class Parking {
       'totalSpaces': totalSpaces,
       'occupiedSpaces': occupiedSpaces,
       'pricePerHour': pricePerHour,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 

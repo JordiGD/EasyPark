@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('✓ Login exitoso')));
-        Navigator.of(context).pushReplacementNamed('/drivers-list');
+        Navigator.of(context).pushReplacementNamed('/parking-map');
       } else if (mounted) {
         setState(() => _errorMessage = 'Email o contraseña incorrectos');
       }

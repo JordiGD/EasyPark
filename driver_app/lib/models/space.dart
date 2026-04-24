@@ -16,8 +16,9 @@ class Space {
   // Convertir JSON a Space
   factory Space.fromJson(Map<String, dynamic> json) {
     return Space(
-      spaceID: json['spaceID'],
-      parkingID: json['parkingID'] ?? 0,
+      // Aceptar tanto 'id' como 'spaceID' del JSON
+      spaceID: json['spaceID'] ?? json['id'],
+      parkingID: json['parkingID'] ?? json['parkingId'] ?? 0,
       spaceNumber: json['spaceNumber'] ?? '',
       status: json['status'] ?? 'AVAILABLE',
       description: json['description'],

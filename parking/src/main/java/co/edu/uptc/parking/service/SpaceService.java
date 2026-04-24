@@ -56,7 +56,9 @@ public class SpaceService {
         
         if (space.isPresent()) {
             Space existingSpace = space.get();
-            existingSpace.setStatus(status);
+            // Limpiar el status de comillas si las tiene
+            String cleanStatus = status.replace("\"", "").trim();
+            existingSpace.setStatus(cleanStatus);
             spaceRepo.save(existingSpace);
             return true;
         }

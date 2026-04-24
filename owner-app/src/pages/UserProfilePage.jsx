@@ -114,7 +114,7 @@ export default function UserProfilePage() {
       };
 
       // Llamar al servicio de actualización
-      const response = await userService.updateProfile(updateData);
+      await userService.updateProfile(updateData);
 
       // Actualizar localStorage con los nuevos datos
       const updatedUser = {
