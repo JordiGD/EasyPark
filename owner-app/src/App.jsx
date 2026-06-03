@@ -6,6 +6,9 @@ import DashboardPage from './pages/DashboardPage';
 import ParkingFormPage from './pages/ParkingFormPage';
 import UserProfilePage from './pages/UserProfilePage';
 import SpacesPage from './pages/SpacesPage';
+import ReviewsPage from './pages/ReviewsPage';
+import ReservationsPage from './pages/ReservationsPage';
+import SubscriptionsPage from './pages/SubscriptionsPage';
 import TestSelectPage from './pages/TestSelectPage';
 import './App.css';
 
@@ -25,8 +28,11 @@ function App() {
         <Route path="/parkings/new" element={<ParkingFormPage />} />
         <Route path="/parkings/:parkingId/edit" element={<ParkingFormPage />} />
         <Route path="/parkings/:parkingId/spaces" element={<SpacesPage />} />
+        <Route path="/parkings/:parkingId/reviews" element={<ReviewsPage />} />
+        <Route path="/parkings/:parkingId/reservations" element={<ReservationsPage />} />
         <Route path="/parkings" element={<DashboardPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/subscriptions" element={<SubscriptionsPage />} />
 
         {/* Default Route */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

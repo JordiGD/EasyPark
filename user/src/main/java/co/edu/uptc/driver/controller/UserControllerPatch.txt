@@ -1,0 +1,1 @@
+Plan: add GET /user/id/{id} endpoint and service method getUserById

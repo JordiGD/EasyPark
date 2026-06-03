@@ -4,8 +4,13 @@ import 'package:provider/provider.dart';
 import '../providers/geolocation_provider.dart';
 import '../providers/parking_provider.dart';
 import '../providers/driver_provider.dart';
+import '../providers/subscription_provider.dart';
 import '../models/parking.dart';
+import '../models/review.dart';
 import '../models/space.dart';
+import '../models/subscription.dart';
+import '../screens/parking_reviews_screen.dart';
+import '../screens/subscription_screen.dart';
 import '../services/driver_service.dart';
 
 class ParkingMapScreen extends StatefulWidget {
@@ -16,8 +21,9 @@ class ParkingMapScreen extends StatefulWidget {
 }
 
 class _ParkingMapScreenState extends State<ParkingMapScreen> {
-  late GoogleMapController mapController;
+  GoogleMapController? mapController;
   Parking? _selectedParking;
+  final DriverService _driverService = DriverService();
 
   @override
   void initState() {
@@ -30,12 +36,12 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
 
   @override
   void dispose() {
-    mapController.dispose();
+    mapController?.dispose();
     super.dispose();
   }
 
   void _moveToLocation(LatLng location) {
-    mapController.animateCamera(
+    mapController?.animateCamera(
       CameraUpdate.newLatLng(location),
     );
   }
@@ -44,139 +50,409 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
     _moveToLocation(location);
   }
 
-  void _showParkingDetails(Parking parking) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  Future<void> _showParkingDetails(Parking parking) async {
+    final BuildContext parentContext = context;
+    List<Review> reviews = [];
+    double averageRating = 0.0;
+    String? reviewError;
+
+    try {
+      reviews = await _driverService.getReviewsByParking(parking.id!);
+      averageRating =
+          await _driverService.getAverageRatingByParking(parking.id!);
+    } catch (e) {
+      reviewError = e.toString();
+    }
+
+    if (!mounted) return;
+
+    bool sheetMounted = true;
+
+    final sheetFuture = showModalBottomSheet(
+      context: parentContext,
+      isScrollControlled: true,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.8,
+        child: StatefulBuilder(
+          builder: (context, setStateSheet) {
+            Future<void> _submitReview(
+                int rating, String comment, int driverId) async {
+              try {
+                final newReview = await _driverService.createReview(
+                  parkingId: parking.id!,
+                  driverId: driverId,
+                  rating: rating,
+                  comment: comment.trim().isEmpty ? null : comment.trim(),
+                );
+
+                double newAverage = averageRating;
+                try {
+                  newAverage = await _driverService
+                      .getAverageRatingByParking(parking.id!);
+                } catch (_) {
+                  // Mantener el promedio actual si el servicio no responde.
+                }
+
+                if (sheetMounted) {
+                  setStateSheet(() {
+                    reviews.insert(0, newReview);
+                    averageRating = newAverage;
+                    reviewError = null;
+                  });
+                }
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(parentContext).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reseña enviada correctamente'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(parentContext).showSnackBar(
+                  SnackBar(
+                    content: Text('Error al enviar reseña: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        parking.name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              parking.name,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              parking.address,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        parking.address,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const Divider(height: 20),
-            // Información
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Icon(Icons.local_parking,
-                        size: 32, color: Colors.blue),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${parking.availableSpaces}/${parking.totalSpaces}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const Text('Espacios', style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Icon(Icons.attach_money,
-                        size: 32, color: Colors.green),
-                    const SizedBox(height: 8),
-                    Text(
-                      '\$${parking.pricePerHour.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const Text('Por hora', style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Icon(
-                      parking.availableSpaces > 0
-                          ? Icons.check_circle
-                          : Icons.cancel,
-                      size: 32,
-                      color: parking.availableSpaces > 0
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      parking.availableSpaces > 0 ? 'Disponible' : 'Lleno',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: parking.availableSpaces > 0
-                            ? Colors.green
-                            : Colors.red,
+                  const Divider(height: 20),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildInfoColumn(
+                                icon: Icons.local_parking,
+                                label: 'Espacios',
+                                value:
+                                    '${parking.availableSpaces}/${parking.totalSpaces}',
+                              ),
+                              _buildInfoColumn(
+                                icon: Icons.attach_money,
+                                label: 'Por hora',
+                                value:
+                                    '\$${parking.pricePerHour.toStringAsFixed(2)}',
+                              ),
+                              _buildInfoColumn(
+                                icon: parking.availableSpaces > 0
+                                    ? Icons.check_circle
+                                    : Icons.cancel,
+                                label: 'Estado',
+                                value: parking.availableSpaces > 0
+                                    ? 'Disponible'
+                                    : 'Lleno',
+                                color: parking.availableSpaces > 0
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber),
+                              const SizedBox(width: 8),
+                              Text(
+                                averageRating > 0
+                                    ? averageRating.toStringAsFixed(1)
+                                    : 'Sin calificación',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '(${reviews.length} reseñas)',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          if (reviewError != null) ...[
+                            Text(
+                              'Error cargando reseñas: $reviewError',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          const Text(
+                            'Reseñas',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star,
+                                          color: Colors.amber),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        averageRating > 0
+                                            ? averageRating.toStringAsFixed(1)
+                                            : 'Sin calificación',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '(${reviews.length} reseñas)',
+                                        style:
+                                            const TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Solo se muestra el promedio aquí. Usa el botón para ver todas las reseñas.',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        Navigator.push(
+                                          parentContext,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                ParkingReviewsScreen(
+                                              parking: parking,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.list),
+                                      label: const Text('Ver reseñas'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                final driverId = parentContext
+                                    .read<DriverProvider>()
+                                    .lastUserID;
+                                if (driverId == null) {
+                                  ScaffoldMessenger.of(parentContext)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Error: Usuario no identificado'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                Navigator.pop(context);
+                                _showAddReviewDialog(
+                                    parking, driverId, _submitReview);
+                              },
+                              icon: const Icon(Icons.rate_review),
+                              label: const Text('Dejar reseña'),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _showReservationDialog(parking);
+                              },
+                              icon: const Icon(Icons.check_circle),
+                              label: const Text('Reservar Espacio'),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _showSubscriptionPlans(parking);
+                              },
+                              icon: const Icon(Icons.card_membership),
+                              label: const Text('Suscribirse'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cerrar'),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Botones de acción
-            if (parking.availableSpaces > 0)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showReservationDialog(parking);
-                  },
-                  icon: const Icon(Icons.check_circle),
-                  label: const Text('Reservar Espacio'),
-                ),
-              )
-            else
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: null,
-                  icon: const Icon(Icons.block),
-                  label: const Text('Sin Espacios Disponibles'),
-                ),
+                  ),
+                ],
               ),
+            );
+          },
+        ),
+      ),
+    );
+
+    sheetFuture.whenComplete(() {
+      sheetMounted = false;
+    });
+
+    await sheetFuture;
+  }
+
+  Widget _buildInfoColumn({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color color = Colors.blue,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, size: 32, color: color),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  void _showAddReviewDialog(
+    Parking parking,
+    int driverId,
+    Future<void> Function(int rating, String comment, int driverId) onSubmit,
+  ) {
+    int selectedRating = 5;
+    final commentController = TextEditingController();
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Dejar una reseña'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Calificación'),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(5, (index) {
+                final starIndex = index + 1;
+                return IconButton(
+                  icon: Icon(
+                    starIndex <= selectedRating
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: Colors.amber,
+                  ),
+                  onPressed: () {
+                    selectedRating = starIndex;
+                    (context as Element).markNeedsBuild();
+                  },
+                );
+              }),
+            ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cerrar'),
+            TextField(
+              controller: commentController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Comentario',
+                hintText: 'Escribe tu opinión',
               ),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await onSubmit(selectedRating, commentController.text, driverId);
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text('Enviar'),
+          ),
+        ],
       ),
     );
   }
@@ -390,6 +666,13 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
                 Navigator.pushNamed(context, '/vehicle-register');
               } else if (value == 'reservations') {
                 Navigator.pushNamed(context, '/my-reservations');
+              } else if (value == 'subscriptions') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SubscriptionScreen(),
+                  ),
+                );
               } else if (value == 'logout') {
                 context.read<DriverProvider>().logout();
                 Navigator.pushNamedAndRemoveUntil(
@@ -437,6 +720,16 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
                     Icon(Icons.bookmark, size: 20),
                     SizedBox(width: 12),
                     Text('Mis Reservas'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'subscriptions',
+                child: Row(
+                  children: [
+                    Icon(Icons.card_membership, size: 20),
+                    SizedBox(width: 12),
+                    Text('Gestionar Suscripciones'),
                   ],
                 ),
               ),
@@ -653,6 +946,321 @@ class _ParkingMapScreenState extends State<ParkingMapScreen> {
           );
         },
       ),
+    );
+  }
+
+  void _showSubscriptionPlans(Parking parking) async {
+    final driverId = context.read<DriverProvider>().lastUserID;
+    if (driverId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Usuario no identificado')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.9,
+        child: SubscriptionPlansSheet(
+          parking: parking,
+          driverId: driverId,
+          onSubscriptionCreated: () {
+            // Recargar datos si es necesario
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class SubscriptionPlansSheet extends StatefulWidget {
+  final Parking parking;
+  final int driverId;
+  final VoidCallback onSubscriptionCreated;
+
+  const SubscriptionPlansSheet({
+    Key? key,
+    required this.parking,
+    required this.driverId,
+    required this.onSubscriptionCreated,
+  }) : super(key: key);
+
+  @override
+  State<SubscriptionPlansSheet> createState() => _SubscriptionPlansSheetState();
+}
+
+class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
+  late DriverService _driverService;
+  List<SubscriptionPlan> _plans = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  SubscriptionPlan? _selectedPlan;
+  String _selectedPaymentMethod = 'CREDIT_CARD';
+  bool _autoRenew = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _driverService = DriverService();
+    _loadPlans();
+  }
+
+  Future<void> _loadPlans() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final plans = await _driverService.getPlansByParking(widget.parking.id!);
+      setState(() {
+        _plans = plans;
+        if (plans.isNotEmpty) {
+          _selectedPlan = plans[0];
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error al cargar planes: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _createSubscription() async {
+    if (_selectedPlan == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _driverService.createSubscription(
+        driverId: widget.driverId,
+        parkingId: widget.parking.id!,
+        planId: _selectedPlan!.id!,
+        paymentMethod: _selectedPaymentMethod,
+        autoRenew: _autoRenew,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Suscripción creada exitosamente!')),
+        );
+        widget.onSubscriptionCreated();
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Planes en ${widget.parking.name}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 20),
+        // Contenido
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+                  ? Center(
+                      child: Text(_errorMessage!,
+                          style: const TextStyle(color: Colors.red)))
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // Planes disponibles
+                          ..._plans.map((plan) => GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedPlan = plan;
+                                  });
+                                },
+                                child: Card(
+                                  color: _selectedPlan?.id == plan.id
+                                      ? Colors.blue.withOpacity(0.1)
+                                      : null,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              plan.name,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Radio<SubscriptionPlan>(
+                                              value: plan,
+                                              groupValue: _selectedPlan,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _selectedPlan = value;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          plan.description,
+                                          style: const TextStyle(
+                                              fontSize: 14, color: Colors.grey),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '\$${plan.monthlyPrice.toStringAsFixed(2)}/mes',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Descuento: ${plan.discountPercentage}%',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )),
+                          const SizedBox(height: 20),
+                          // Opciones de pago
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Método de Pago',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DropdownButton<String>(
+                                    value: _selectedPaymentMethod,
+                                    isExpanded: true,
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: 'CREDIT_CARD',
+                                        child: Text('Tarjeta de Crédito'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'BANK_ACCOUNT',
+                                        child: Text('Cuenta Bancaria'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'WALLET',
+                                        child: Text('Billetera Digital'),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedPaymentMethod =
+                                            value ?? 'CREDIT_CARD';
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Checkbox(
+                                        value: _autoRenew,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _autoRenew = value ?? false;
+                                          });
+                                        },
+                                      ),
+                                      const Expanded(
+                                        child: Text('Renovación automática'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+        ),
+        // Botón de acción
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _selectedPlan != null && !_isLoading
+                  ? _createSubscription
+                  : null,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      'Suscribirse a \$${_selectedPlan?.monthlyPrice.toStringAsFixed(2) ?? "0"}/mes',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

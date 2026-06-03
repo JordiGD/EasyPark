@@ -98,12 +98,20 @@ export default function DashboardPage() {
           {/* Botón para Crear Parqueadero */}
           <div className="section-header">
             <h2>Mis Parqueaderos</h2>
-            <button
-              className="btn-primary"
-              onClick={() => navigate('/parkings/new')}
-            >
-              + Crear Parqueadero
-            </button>
+            <div className="header-buttons">
+              <button
+                className="btn-primary"
+                onClick={() => navigate('/parkings/new')}
+              >
+                + Crear Parqueadero
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => navigate('/subscriptions')}
+              >
+                💳 Gestionar Suscripciones
+              </button>
+            </div>
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -150,6 +158,20 @@ export default function DashboardPage() {
                       title="Ver espacios y estados"
                     >
                       👀 Ver Espacios
+                    </button>
+                    <button
+                      className="btn-view-reviews"
+                      onClick={() => navigate(`/parkings/${parking.id}/reviews`)}
+                      title="Ver reseñas y calificación"
+                    >
+                      ⭐ Reseñas
+                    </button>
+                    <button
+                      className="btn-view-reservations"
+                      onClick={() => navigate(`/parkings/${parking.id}/reservations`)}
+                      title="Ver y cancelar reservas"
+                    >
+                      📋 Reservas
                     </button>
                     <button
                       className="btn-edit"

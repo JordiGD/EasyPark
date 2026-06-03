@@ -3,7 +3,6 @@ package co.edu.uptc.parking.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,7 @@ public class SpaceService {
         List<Space> existingSpaces = spaceRepo.findByParkingId(parkingId);
         long spaceCount = existingSpaces.size();
         
-        String spaceNumber = "SPACE-" + parkingId + "-" + (spaceCount + 1) + "-" + UUID.randomUUID().toString().substring(0, 8);
+        String spaceNumber = String.valueOf(spaceCount + 1);
         
         Space newSpace = new Space();
         newSpace.setParkingId(parkingId);

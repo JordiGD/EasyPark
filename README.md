@@ -78,6 +78,12 @@ git clone https://github.com/JordiGD/EasyPark.git
 docker-compose down -v
 ```
 
+> Nota: este comando elimina el volumen `mysql_data` y borra todos los datos de MySQL.
+> Úsalo solo la primera vez o cuando necesites reinicializar las bases de datos.
+> Para reinicios normales, usa `docker-compose down` o `docker-compose stop` para mantener los datos.
+
+> Si agregas un nuevo servicio de base de datos o cambias usuarios/contraseñas, es necesario reiniciar los volúmenes porque `mysql-init.sql` solo se aplica en la primera creación del contenedor.
+
 #### Construir imágenes
 ```powershell
 docker-compose build --no-cache
@@ -130,6 +136,7 @@ xxxxxxxxxx     easypark-admin-app       Up X seconds
 |---------|-----|----------|
 | **User Service** | http://localhost:8080 | Gestión de usuarios, autenticación |
 | **Parking Service** | http://localhost:8081 | Gestión de parqueaderos y espacios |
+| **Review Service** | http://localhost:8083 | Gestión de reseñas y calificaciones |
 | **Eureka Server** | http://localhost:8761/eureka | Service discovery/registry |
 
 ## Bases de Datos
@@ -178,6 +185,75 @@ EXIT;                        -- Salir de MySQL
 docker compose exec dbUser mysql -u parking_user -pparking_pass123 parking_db
 ```
 
+## 💾 Persistencia de Datos
+
+### ⚠️ COMANDOS CRÍTICOS
+
+**Para detener sin perder datos (RECOMENDADO):**
+```bash
+docker-compose stop
+```
+Los contenedores se detienen pero los datos en `mysql_data/` se mantienen.
+
+**Para reiniciar servicios manteniendo datos:**
+```bash
+docker-compose start
+```
+
+**Para remover contenedores pero mantener datos:**
+```bash
+docker-compose down
+```
+Los volúmenes se mantienen. La base de datos sigue intacta en `mysql_data/`
+
+**⚠️ DESTRUIR TODO (borra datos permanentemente):**
+```bash
+docker-compose down -v
+```
+**NUNCA hagas esto a menos que quieras reinicializar la base de datos.**
+
+### Ubicación de Datos
+
+Los datos de MySQL se almacenan en un **volumen bind** (carpeta local):
+```
+EasyPark/
+└── mysql_data/          ← Datos persistentes de MySQL
+    ├── easypark_db/
+    ├── parking_db/
+    └── ...
+```
+
+Esta carpeta es **visible y accesible** localmente. Si necesitas hacer backup:
+```bash
+# Backup de datos (Windows)
+xcopy mysql_data mysql_data_backup /E /I
+
+# Backup de datos (Mac/Linux)
+cp -r mysql_data mysql_data_backup
+```
+
+### Reinicializar Bases de Datos
+
+Si necesitas limpiar la base de datos pero mantener los servicios:
+
+**Opción 1: Eliminar volumen completamente**
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+**Opción 2: Mantener contenedores, limpiar solo DB**
+```bash
+# 1. Detener servicios
+docker-compose stop
+
+# 2. Eliminar carpeta de datos
+rm -r mysql_data  # (o deltree mysql_data en Windows)
+
+# 3. Reiniciar
+docker-compose start
+```
+
 ## API Endpoints
 
 ### User Service (8080)
@@ -204,6 +280,18 @@ GET    /api/parkings/{id}/status → Estado de ocupación
 POST   /api/spaces/create/{parkingId}  → Crear espacio
 GET    /api/spaces/parking/{parkingId} → Espacios del parqueadero
 GET    /api/spaces/{id}/status         → Estado del espacio
+```
+
+### Review Service (8083)
+
+```
+POST   /api/reviews                            → Crear reseña
+GET    /api/reviews/{id}                       → Obtener reseña por id
+GET    /api/reviews/parking/{parkingId}        → Reseñas de un parqueadero
+GET    /api/reviews/parking/{parkingId}/average → Calificación promedio por parqueadero
+GET    /api/reviews/driver/{driverId}          → Reseñas de un conductor
+PUT    /api/reviews/{id}                       → Actualizar reseña
+DELETE /api/reviews/{id}                       → Eliminar reseña
 ```
 
 ## Integración con Apps

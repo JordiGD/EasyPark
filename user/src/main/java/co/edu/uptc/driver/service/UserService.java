@@ -95,4 +95,10 @@ public class UserService {
         return userMapper.toDTO(user);
     }
     
+    public UserDTO getUserById(Long id) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return userMapper.toDTO(user);
+    }
+    
 }

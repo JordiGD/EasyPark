@@ -296,8 +296,26 @@
   font-weight: 600;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -314,10 +332,10 @@
 }
 
 .btn-secondary {
-  background: #e0e0e0;
-  color: #333;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
@@ -326,7 +344,8 @@
 }
 
 .btn-secondary:hover {
-  background: #d0d0d0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
 }
 
 .btn-edit {
@@ -506,10 +525,12 @@
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap;
 }
 
 .btn-edit {
   flex: 1;
+  min-width: 80px;
   padding: 10px 16px;
   background-color: #667eea;
   color: white;
@@ -527,8 +548,69 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.btn-view-spaces {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px 16px;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-view-spaces:hover {
+  background-color: #38a169;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.btn-view-reviews {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px 16px;
+  background-color: #fb923c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-view-reviews:hover {
+  background-color: #f97316;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-view-reservations {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px 16px;
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-view-reservations:hover {
+  background-color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
 .btn-delete {
   flex: 1;
+  min-width: 80px;
   padding: 10px 16px;
   background-color: #f44336;
   color: white;

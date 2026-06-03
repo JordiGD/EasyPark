@@ -3,6 +3,7 @@ services:
   dbUser:
     image: mysql:8.0
     container_name: easypark-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -11,7 +12,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql
       - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - easypark-network
@@ -122,6 +123,60 @@ services:
     networks:
       - easypark-network
 
+  # ==================== REVIEW SERVICE (Spring Boot Microservice) ====================
+  review-service:
+    build:
+      context: ./review
+      dockerfile: Dockerfile
+    container_name: easypark-review
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${REVIEW_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${REVIEW_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${REVIEW_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_REVIEW}
+      SPRING_APPLICATION_NAME: review-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
+      EUREKA_INSTANCE_HOSTNAME: review-service
+    ports:
+      - "${SERVER_PORT_REVIEW}:${SERVER_PORT_REVIEW}"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
+  # ==================== SUBSCRIPTION SERVICE (Spring Boot Microservice) ====================
+  subscription-service:
+    build:
+      context: ./subscription
+      dockerfile: Dockerfile
+    container_name: easypark-subscription
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${SUBSCRIPTION_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${SUBSCRIPTION_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SUBSCRIPTION_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_SUBSCRIPTION}
+      SPRING_APPLICATION_NAME: subscription-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
+      EUREKA_INSTANCE_HOSTNAME: subscription-service
+    ports:
+      - "${SERVER_PORT_SUBSCRIPTION}:${SERVER_PORT_SUBSCRIPTION}"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
   # ==================== OWNER APP (React) ====================
   owner-app:
     build:
@@ -169,6 +224,8 @@ services:
       - backend
       - parking-service
       - reservation-service
+      - review-service
+      - subscription-service
       - owner-app
       - admin-app
       - eureka
@@ -176,9 +233,6 @@ services:
       - easypark-network
     profiles:
       - production
-
-volumes:
-  mysql_data:
 
 networks:
   easypark-network:

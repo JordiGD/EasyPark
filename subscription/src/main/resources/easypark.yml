@@ -1,0 +1,4 @@
+# Configuración de EasyPark
+easypark:
+  user-service:
+    url: http://backend:8080

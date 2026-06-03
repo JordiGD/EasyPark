@@ -2,13 +2,17 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/driver.dart';
 import '../models/parking.dart';
+import '../models/review.dart';
 import '../models/space.dart';
+import '../models/subscription.dart';
 
 class DriverService {
   // URL del servidor backend
   static const String baseUrl = 'http://localhost:8080'; // User Service
   static const String parkingApiUrl =
       'http://localhost:8081'; // Parking Service
+  static const String subscriptionApiUrl =
+      'http://localhost:8084'; // Subscription Service
   // Para emulador Android: 'http://10.0.2.2:8080'
   // Para dispositivo físico: 'http://192.168.X.X:8080'
 
@@ -219,6 +223,131 @@ class DriverService {
     }
   }
 
+  // ==================== REVIEW ENDPOINTS ====================
+
+  /// URL del Review Service
+  static const String reviewApiUrl = 'http://localhost:8083';
+
+  /// Obtener reseñas de un parqueadero
+  Future<List<Review>> getReviewsByParking(int parkingId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$reviewApiUrl/api/reviews/parking/$parkingId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonList = jsonDecode(response.body) as List<dynamic>;
+        return jsonList.map((json) => Review.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al obtener reseñas: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getReviewsByParking: $e');
+    }
+  }
+
+  /// Obtener calificación promedio de un parqueadero
+  Future<double> getAverageRatingByParking(int parkingId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$reviewApiUrl/api/reviews/parking/$parkingId/average'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is num) {
+          return decoded.toDouble();
+        }
+        return double.parse(response.body);
+      } else {
+        throw Exception(
+            'Error al obtener calificación promedio: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getAverageRatingByParking: $e');
+    }
+  }
+
+  /// Crear reseña de un parqueadero
+  Future<Review> createReview({
+    required int parkingId,
+    required int driverId,
+    required int rating,
+    String? comment,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$reviewApiUrl/api/reviews'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'parkingId': parkingId,
+              'driverId': driverId,
+              'rating': rating,
+              'comment': comment,
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody = response.body.trim();
+        if (responseBody.isEmpty) {
+          return Review(
+            parkingId: parkingId,
+            driverId: driverId,
+            rating: rating,
+            comment: comment,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        }
+
+        try {
+          final decoded = jsonDecode(responseBody);
+          if (decoded is Map<String, dynamic>) {
+            return Review.fromJson(decoded);
+          }
+          if (decoded is List && decoded.isNotEmpty) {
+            return Review.fromJson(decoded.first as Map<String, dynamic>);
+          }
+
+          return Review(
+            parkingId: parkingId,
+            driverId: driverId,
+            rating: rating,
+            comment: comment,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        } catch (_) {
+          return Review(
+            parkingId: parkingId,
+            driverId: driverId,
+            rating: rating,
+            comment: comment,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        }
+      } else {
+        throw Exception('Error al crear reseña: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en createReview: $e');
+    }
+  }
+
   // ==================== SPACE ENDPOINTS ====================
 
   /// Obtener espacios de un parqueadero
@@ -393,6 +522,232 @@ class DriverService {
       }
     } catch (e) {
       throw Exception('Error en cancelReservation: $e');
+    }
+  }
+
+  // ==================== SUBSCRIPTION ENDPOINTS ====================
+
+  /// Obtener planes de suscripción disponibles globales (deprecated, usar getPlansByParking en su lugar)
+  @Deprecated('Use getPlansByParking instead')
+  Future<List<SubscriptionPlan>> getSubscriptionPlans() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$subscriptionApiUrl/api/subscriptions/plans'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((json) => SubscriptionPlan.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al obtener planes: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getSubscriptionPlans: $e');
+    }
+  }
+
+  /// Obtener planes de suscripción disponibles para un parqueadero específico
+  Future<List<SubscriptionPlan>> getPlansByParking(int parkingId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/plans/parking/$parkingId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((json) => SubscriptionPlan.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al obtener planes: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getPlansByParking: $e');
+    }
+  }
+
+  /// Obtener suscripción activa del conductor en un parqueadero específico
+  Future<DriverSubscription?> getActiveSubscription(
+      int driverId, int parkingId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/driver/$driverId/active?parkingId=$parkingId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return DriverSubscription.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 404) {
+        return null; // No active subscription
+      } else {
+        throw Exception('Error al obtener suscripción: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getActiveSubscription: $e');
+    }
+  }
+
+  /// Obtener todas las suscripciones del conductor
+  Future<List<DriverSubscription>> getDriverSubscriptions(int driverId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$subscriptionApiUrl/api/subscriptions/driver/$driverId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList
+            .map((json) => DriverSubscription.fromJson(json))
+            .toList();
+      } else {
+        throw Exception('Error al obtener suscripciones: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getDriverSubscriptions: $e');
+    }
+  }
+
+  /// Obtener descuento aplicable para el conductor en un parqueadero específico
+  Future<SubscriptionDiscount?> getApplicableDiscount(
+      int driverId, int parkingId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/driver/$driverId/discount?parkingId=$parkingId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return SubscriptionDiscount.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 404) {
+        return null;
+      } else {
+        throw Exception('Error al obtener descuento: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en getApplicableDiscount: $e');
+    }
+  }
+
+  /// Crear nueva suscripción en un parqueadero específico
+  Future<DriverSubscription> createSubscription({
+    required int driverId,
+    required int parkingId,
+    required int planId,
+    required String paymentMethod,
+    required bool autoRenew,
+  }) async {
+    try {
+      final subscriptionData = {
+        'driverId': driverId,
+        'parkingId': parkingId,
+        'planId': planId,
+        'paymentMethod': paymentMethod,
+        'autoRenew': autoRenew,
+      };
+
+      final response = await http
+          .post(
+            Uri.parse('$subscriptionApiUrl/api/subscriptions'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(subscriptionData),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Timeout al conectar'),
+          );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return DriverSubscription.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Error al crear suscripción: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en createSubscription: $e');
+    }
+  }
+
+  /// Renovar suscripción
+  Future<DriverSubscription> renewSubscription(int subscriptionId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/$subscriptionId/renew'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return DriverSubscription.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Error al renovar suscripción: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en renewSubscription: $e');
+    }
+  }
+
+  /// Cancelar suscripción
+  Future<DriverSubscription> cancelSubscription(int subscriptionId) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/$subscriptionId/cancel'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return DriverSubscription.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Error al cancelar suscripción: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en cancelSubscription: $e');
+    }
+  }
+
+  /// Pausar suscripción
+  Future<DriverSubscription> pauseSubscription(int subscriptionId) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+            '$subscriptionApiUrl/api/subscriptions/$subscriptionId/pause'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al conectar'),
+      );
+
+      if (response.statusCode == 200) {
+        return DriverSubscription.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Error al pausar suscripción: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error en pauseSubscription: $e');
     }
   }
 }

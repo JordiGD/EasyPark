@@ -42,6 +42,7 @@ logs/
 *.sqlite
 *.db
 *.sqlite3
+mysql_data/
 
 # ==================== SSL/CERTS ====================
 ssl/

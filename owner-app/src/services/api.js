@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const PARKING_API_URL = process.env.REACT_APP_PARKING_API_URL || 'http://localhost:8081';
+const REVIEW_API_URL = process.env.REACT_APP_REVIEW_API_URL || 'http://localhost:8083';
+const RESERVATION_API_URL = process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:8082';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -12,6 +14,27 @@ const api = axios.create({
 
 const parkingApi = axios.create({
   baseURL: PARKING_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const reviewApi = axios.create({
+  baseURL: REVIEW_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const reservationApi = axios.create({
+  baseURL: RESERVATION_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const subscriptionApi = axios.create({
+  baseURL: process.env.REACT_APP_SUBSCRIPTION_API_URL || 'http://localhost:8084',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,6 +57,22 @@ parkingApi.interceptors.request.use((config) => {
   return config;
 });
 
+reviewApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+reservationApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Manejo de errores
 api.interceptors.response.use(
   (response) => response,
@@ -47,6 +86,47 @@ api.interceptors.response.use(
 );
 
 parkingApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+reviewApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+reservationApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+subscriptionApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+subscriptionApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -143,4 +223,171 @@ export const spaceService = {
   },
 };
 
-export default api;
+// ==================== REVIEW ENDPOINTS ====================
+
+export const reviewService = {
+  // Obtener todas las reseñas de un parqueadero
+  getReviewsByParking: (parkingId) => {
+    return reviewApi.get(`/api/reviews/parking/${parkingId}`);
+  },
+
+  // Obtener promedio de calificación de un parqueadero
+  getAverageRating: (parkingId) => {
+    return reviewApi.get(`/api/reviews/parking/${parkingId}/average`);
+  },
+
+  // Obtener todas las reseñas
+  getAllReviews: () => {
+    return reviewApi.get('/api/reviews/all');
+  },
+
+  // Obtener reseña por ID
+  getReviewById: (id) => {
+    return reviewApi.get(`/api/reviews/${id}`);
+  },
+
+  // Obtener reseñas por conductor
+  getReviewsByDriver: (driverId) => {
+    return reviewApi.get(`/api/reviews/driver/${driverId}`);
+  },
+};
+
+// ==================== RESERVATION ENDPOINTS ====================
+
+export const reservationService = {
+  // Obtener todas las reservas de un parqueadero
+  getReservationsByParking: (parkingId) => {
+    return reservationApi.get(`/api/reservations/parking/${parkingId}`);
+  },
+
+  // Obtener reserva por ID
+  getReservationById: (id) => {
+    return reservationApi.get(`/api/reservations/${id}`);
+  },
+
+  // Obtener reservas por conductor
+  getReservationsByDriver: (driverId) => {
+    return reservationApi.get(`/api/reservations/driver/${driverId}`);
+  },
+
+  // Obtener reservas activas por conductor
+  getActiveReservationsByDriver: (driverId) => {
+    return reservationApi.get(`/api/reservations/driver/${driverId}/active`);
+  },
+
+  // Obtener reservas por espacio
+  getReservationsBySpace: (spaceId) => {
+    return reservationApi.get(`/api/reservations/space/${spaceId}`);
+  },
+
+  // Cancelar reserva
+  cancelReservation: (id) => {
+    return reservationApi.put(`/api/reservations/${id}/cancel`);
+  },
+
+  // Completar reserva
+  completeReservation: (id) => {
+    return reservationApi.put(`/api/reservations/${id}/complete`);
+  },
+};
+
+// ==================== SUBSCRIPTION ENDPOINTS ====================
+
+export const subscriptionService = {
+  // Obtener todos los planes activos
+  getActivePlans: () => {
+    return subscriptionApi.get('/api/subscriptions/plans');
+  },
+
+  // Obtener todos los planes
+  getAllPlans: () => {
+    return subscriptionApi.get('/api/subscriptions/plans/all');
+  },
+
+  // Obtener un plan específico
+  getPlanById: (planId) => {
+    return subscriptionApi.get(`/api/subscriptions/plans/${planId}`);
+  },
+
+  // Obtener planes activos de un parqueadero específico
+  getActivePlansByParking: (parkingId) => {
+    return subscriptionApi.get(`/api/subscriptions/plans/parking/${parkingId}`);
+  },
+
+  // Crear nuevo plan
+  createPlan: (planData) => {
+    return subscriptionApi.post('/api/subscriptions/plans', planData);
+  },
+
+  // Actualizar plan
+  updatePlan: (planId, planData) => {
+    return subscriptionApi.put(`/api/subscriptions/plans/${planId}`, planData);
+  },
+
+  // Desactivar plan
+  deactivatePlan: (planId) => {
+    return subscriptionApi.delete(`/api/subscriptions/plans/${planId}`);
+  },
+
+  // Crear suscripción para un conductor por email
+  createSubscriptionByEmail: (subscriptionData) => {
+    return subscriptionApi.post('/api/subscriptions/by-email', subscriptionData);
+  },
+
+  // Crear suscripción para un conductor
+  createSubscription: (subscriptionData) => {
+    return subscriptionApi.post('/api/subscriptions', subscriptionData);
+  },
+
+  // Obtener suscripción activa de un conductor
+  getActiveSubscription: (driverId) => {
+    return subscriptionApi.get(`/api/subscriptions/driver/${driverId}/active`);
+  },
+
+  // Obtener todas las suscripciones de un conductor
+  getDriverSubscriptions: (driverId) => {
+    return subscriptionApi.get(`/api/subscriptions/driver/${driverId}`);
+  },
+
+  // Obtener descuento aplicable
+  getApplicableDiscount: (driverId) => {
+    return subscriptionApi.get(`/api/subscriptions/driver/${driverId}/discount`);
+  },
+
+  // Renovar suscripción
+  renewSubscription: (subscriptionId) => {
+    return subscriptionApi.post(`/api/subscriptions/${subscriptionId}/renew`);
+  },
+
+  // Cancelar suscripción
+  cancelSubscription: (subscriptionId) => {
+    return subscriptionApi.put(`/api/subscriptions/${subscriptionId}/cancel`);
+  },
+
+  // Pausar suscripción
+  pauseSubscription: (subscriptionId) => {
+    return subscriptionApi.put(`/api/subscriptions/${subscriptionId}/pause`);
+  },
+
+  // Verificar si puede reservar
+  canReserve: (driverId, estimatedHours) => {
+    return subscriptionApi.get(`/api/subscriptions/driver/${driverId}/can-reserve`, {
+      params: { estimatedHours },
+    });
+  },
+
+  getSubscriptionsByParking: (parkingId) =>
+    subscriptionApi.get(`/api/subscriptions/parking/${parkingId}`),
+
+  getActiveSubscriptionsByParking: (parkingId) =>
+    subscriptionApi.get(`/api/subscriptions/parking/${parkingId}/active`),
+};
+
+export default {
+  userService,
+  parkingService,
+  spaceService,
+  reservationService,
+  reviewService,
+  subscriptionService,
+};

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/driver_provider.dart';
 import 'providers/parking_provider.dart';
 import 'providers/geolocation_provider.dart';
+import 'providers/subscription_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/driver_registration_screen.dart';
 import 'screens/drivers_list_screen.dart';
@@ -12,6 +13,7 @@ import 'screens/parking_detail_screen.dart';
 import 'screens/parking_map_screen.dart';
 import 'screens/edit_user_screen.dart';
 import 'screens/my_reservations_screen.dart';
+import 'screens/subscription_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DriverProvider()),
         ChangeNotifierProvider(create: (_) => ParkingProvider()),
         ChangeNotifierProvider(create: (_) => GeolocationProvider()),
+        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
       ],
       child: MaterialApp(
         title: 'EasyPark - Conductores',
@@ -74,6 +77,7 @@ class MyApp extends StatelessWidget {
           '/parking-map': (context) => const ParkingMapScreen(),
           '/edit-user': (context) => const EditUserScreen(),
           '/my-reservations': (context) => const MyReservationsScreen(),
+          '/subscriptions': (context) => const SubscriptionScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

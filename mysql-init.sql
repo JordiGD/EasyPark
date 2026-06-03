@@ -32,13 +32,6 @@ CREATE TABLE IF NOT EXISTS owner (
   INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO user (name, phone_number, email, password, role) VALUES
-('Default ADMIN', '1234567890', 'admin@easypark.com', 'password123', 'admin');
-INSERT INTO user (name, phone_number, email, password, role) VALUES
-('Default DRIVER', '1234567890', 'driver@easypark.com', 'password123', 'driver');
-INSERT INTO user (name, phone_number, email, password, role) VALUES
-('Default OWNER', '1234567890', 'owner@easypark.com', 'password123', 'owner');
-
 -- ==================== CREAR BASE DE DATOS PARKING (PARKING SERVICE) ====================
 CREATE DATABASE IF NOT EXISTS parking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -76,19 +69,23 @@ CREATE TABLE IF NOT EXISTS space (
 -- ==================== CREDENCIALES Y PRIVILEGIOS ====================
 
 -- Usuario para User Service (easypark_db)
-CREATE USER IF NOT EXISTS 'easypark_user'@'%' IDENTIFIED BY 'easypark_pass123';
+DROP USER IF EXISTS 'easypark_user'@'%';
+CREATE USER 'easypark_user'@'%' IDENTIFIED BY 'easypark_pass123';
 GRANT ALL PRIVILEGES ON easypark_db.* TO 'easypark_user'@'%';
 
 -- Usuario para Parking Service (parking_db)
-CREATE USER IF NOT EXISTS 'parking_user'@'%' IDENTIFIED BY 'parking_pass123';
+DROP USER IF EXISTS 'parking_user'@'%';
+CREATE USER 'parking_user'@'%' IDENTIFIED BY 'parking_pass123';
 GRANT ALL PRIVILEGES ON parking_db.* TO 'parking_user'@'%';
 
 -- Usuario para Reservation Service (reservation_db)
-CREATE USER IF NOT EXISTS 'reservation_user'@'%' IDENTIFIED BY 'reservation_pass123';
-GRANT ALL PRIVILEGES ON reservation_db.* TO 'reservation_user'@'%';
 CREATE DATABASE IF NOT EXISTS reservation_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE reservation_db;
+
+DROP USER IF EXISTS 'reservation_user'@'%';
+CREATE USER 'reservation_user'@'%' IDENTIFIED BY 'reservation_pass123';
+GRANT ALL PRIVILEGES ON reservation_db.* TO 'reservation_user'@'%';
 
 -- Tabla: reservation (Reservas de Espacios de Parqueo)
 CREATE TABLE IF NOT EXISTS reservation (
@@ -107,8 +104,104 @@ CREATE TABLE IF NOT EXISTS reservation (
   INDEX idx_start_time (start_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Usuario para Reservation Service (reservation_db)
-CREATE USER IF NOT EXISTS 'reservation_user'@'%' IDENTIFIED BY 'reservation_pass123';
-GRANT ALL PRIVILEGES ON reservation_db.* TO 'reservation_user'@'%';
+CREATE DATABASE IF NOT EXISTS review_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE review_db;
+
+CREATE TABLE IF NOT EXISTS review (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  parking_id BIGINT NOT NULL,
+  driver_id BIGINT NOT NULL,
+  rating INT NOT NULL,
+  comment VARCHAR(1000),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_parking_id (parking_id),
+  INDEX idx_driver_id (driver_id),
+  INDEX idx_rating (rating)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Usuario para Review Service (review_db)
+DROP USER IF EXISTS 'review_user'@'%';
+CREATE USER 'review_user'@'%' IDENTIFIED BY 'review_pass123';
+GRANT ALL PRIVILEGES ON review_db.* TO 'review_user'@'%';
+
+-- ==================== CREAR BASE DE DATOS SUBSCRIPTION (SUBSCRIPTION SERVICE) ====================
+CREATE DATABASE IF NOT EXISTS subscription_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE subscription_db;
+
+-- Tabla: subscription_plans (Planes de Suscripción - Parking Específicos)
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  parking_id BIGINT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  monthly_price DECIMAL(10, 2) NOT NULL,
+  discount_percentage INT NOT NULL DEFAULT 0,
+  max_daily_hours INT,
+  monthly_hours INT,
+  features JSON,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_parking_name (parking_id, name),
+  INDEX idx_is_active (is_active),
+  INDEX idx_parking_id (parking_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla: driver_subscriptions (Suscripciones de Conductores por Parqueadero)
+CREATE TABLE IF NOT EXISTS driver_subscriptions (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  driver_id BIGINT NOT NULL,
+  parking_id BIGINT NOT NULL,
+  plan_id BIGINT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+  start_date DATETIME NOT NULL,
+  end_date DATETIME NOT NULL,
+  renewal_date DATETIME NOT NULL,
+  auto_renew BOOLEAN DEFAULT TRUE,
+  hours_used_this_month INT DEFAULT 0,
+  payment_method VARCHAR(50) NOT NULL,
+  next_payment_date DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (plan_id) REFERENCES subscription_plans(id),
+  INDEX idx_driver_id (driver_id),
+  INDEX idx_parking_id (parking_id),
+  INDEX idx_plan_id (plan_id),
+  INDEX idx_status (status),
+  INDEX idx_driver_parking_status (driver_id, parking_id, status),
+  INDEX idx_auto_renew (auto_renew)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla: subscription_transactions (Transacciones de Suscripción)
+CREATE TABLE IF NOT EXISTS subscription_transactions (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  driver_subscription_id BIGINT NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  description TEXT,
+  status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+  transaction_date DATETIME NOT NULL,
+  payment_gateway_id VARCHAR(255),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (driver_subscription_id) REFERENCES driver_subscriptions(id),
+  INDEX idx_subscription_id (driver_subscription_id),
+  INDEX idx_status (status),
+  INDEX idx_transaction_date (transaction_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Usuario para Subscription Service (subscription_db)
+DROP USER IF EXISTS 'subscription_user'@'%';
+CREATE USER 'subscription_user'@'%' IDENTIFIED BY 'subscription_pass123';
+GRANT ALL PRIVILEGES ON subscription_db.* TO 'subscription_user'@'%';
+
+-- Insertar planes de suscripción por defecto para parking_id 1
+INSERT INTO subscription_plans (parking_id, name, description, monthly_price, discount_percentage, max_daily_hours, monthly_hours, features, is_active)
+VALUES 
+  (1, 'Plan Básico', 'Plan ideal para conductores ocasionales', 9.99, 5, 2, 40, '["Basic features"]', TRUE),
+  (1, 'Plan Premium', 'Plan para conductores frecuentes', 29.99, 15, 8, 200, '["Priority booking", "Customer support", "Discounted rates"]', TRUE),
+  (1, 'Plan VIP', 'Plan máximo con todos los beneficios', 59.99, 30, NULL, NULL, '["Priority booking", "24/7 support", "VIP rates", "Free cancellation"]', TRUE);
 
 FLUSH PRIVILEGES;
