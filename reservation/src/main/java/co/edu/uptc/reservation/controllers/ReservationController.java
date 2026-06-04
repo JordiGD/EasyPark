@@ -14,54 +14,66 @@ import java.util.List;
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
-    
+
     private final ReservationService reservationService;
-    
+
     @PostMapping
     public ResponseEntity<ReservationDTO> createReservation(@RequestBody CreateReservationRequest request) {
-        ReservationDTO reservation = reservationService.createReservation(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.createReservation(request));
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDTO> getReservation(@PathVariable Long id) {
-        ReservationDTO reservation = reservationService.getReservationById(id);
-        return ResponseEntity.ok(reservation);
+        return ResponseEntity.ok(reservationService.getReservationById(id));
     }
-    
+
     @GetMapping("/driver/{driverId}")
     public ResponseEntity<List<ReservationDTO>> getReservationsByDriver(@PathVariable Long driverId) {
-        List<ReservationDTO> reservations = reservationService.getReservationsByDriver(driverId);
-        return ResponseEntity.ok(reservations);
+        return ResponseEntity.ok(reservationService.getReservationsByDriver(driverId));
     }
-    
+
     @GetMapping("/driver/{driverId}/active")
     public ResponseEntity<List<ReservationDTO>> getActiveReservationsByDriver(@PathVariable Long driverId) {
-        List<ReservationDTO> reservations = reservationService.getActiveReservationsByDriver(driverId);
-        return ResponseEntity.ok(reservations);
+        return ResponseEntity.ok(reservationService.getActiveReservationsByDriver(driverId));
     }
-    
+
     @GetMapping("/parking/{parkingId}")
     public ResponseEntity<List<ReservationDTO>> getReservationsByParking(@PathVariable Long parkingId) {
-        List<ReservationDTO> reservations = reservationService.getReservationsByParking(parkingId);
-        return ResponseEntity.ok(reservations);
+        return ResponseEntity.ok(reservationService.getReservationsByParking(parkingId));
     }
-    
+
     @GetMapping("/space/{spaceId}")
     public ResponseEntity<List<ReservationDTO>> getReservationsBySpace(@PathVariable Long spaceId) {
-        List<ReservationDTO> reservations = reservationService.getReservationsBySpace(spaceId);
-        return ResponseEntity.ok(reservations);
+        return ResponseEntity.ok(reservationService.getReservationsBySpace(spaceId));
     }
-    
+
+    /** Conductor confirma su llegada al parqueadero */
+    @PutMapping("/{id}/driver-confirm")
+    public ResponseEntity<ReservationDTO> driverConfirmArrival(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.driverConfirmArrival(id));
+    }
+
+    /** Propietario confirma la llegada del conductor */
+    @PutMapping("/{id}/owner-confirm")
+    public ResponseEntity<ReservationDTO> ownerConfirmArrival(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.ownerConfirmArrival(id));
+    }
+
+    /** Propietario cancela la reserva (solo disponible después de 15 minutos) */
     @PutMapping("/{id}/cancel")
     public ResponseEntity<ReservationDTO> cancelReservation(@PathVariable Long id) {
-        ReservationDTO reservation = reservationService.cancelReservation(id);
-        return ResponseEntity.ok(reservation);
+        return ResponseEntity.ok(reservationService.cancelReservation(id));
     }
-    
+
+    /** Completar reserva tras pago (llamado por payment-service) */
     @PutMapping("/{id}/complete")
     public ResponseEntity<ReservationDTO> completeReservation(@PathVariable Long id) {
-        ReservationDTO reservation = reservationService.completeReservation(id);
-        return ResponseEntity.ok(reservation);
+        return ResponseEntity.ok(reservationService.completeReservation(id));
+    }
+
+    /** Marcar como facturada (llamado por payment-service) */
+    @PutMapping("/{id}/invoiced")
+    public ResponseEntity<ReservationDTO> markAsInvoiced(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.markAsInvoiced(id));
     }
 }

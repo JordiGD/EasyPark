@@ -525,6 +525,76 @@ class DriverService {
     }
   }
 
+  /// Obtener todas las reservas de un conductor (todos los estados)
+  Future<List<Map<String, dynamic>>> getAllReservations(int driverId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8082/api/reservations/driver/$driverId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10), onTimeout: () => throw Exception('Timeout'));
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+      throw Exception('Error al obtener reservas: ${response.body}');
+    } catch (e) {
+      throw Exception('Error en getAllReservations: $e');
+    }
+  }
+
+  /// Conductor confirma su llegada al parqueadero
+  Future<Map<String, dynamic>> driverConfirmArrival(int reservationId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('http://localhost:8082/api/reservations/$reservationId/driver-confirm'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10), onTimeout: () => throw Exception('Timeout'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      throw Exception('Error al confirmar llegada: ${response.body}');
+    } catch (e) {
+      throw Exception('Error en driverConfirmArrival: $e');
+    }
+  }
+
+  /// Obtener factura por reserva
+  Future<Map<String, dynamic>?> getInvoiceByReservation(int reservationId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8085/api/invoices/reservation/$reservationId'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10), onTimeout: () => throw Exception('Timeout'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Obtener notificaciones no leídas del conductor
+  Future<List<Map<String, dynamic>>> getUnreadNotifications(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8086/api/notifications/user/$userId/unread'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10), onTimeout: () => throw Exception('Timeout'));
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Marcar notificación como leída
+  Future<void> markNotificationRead(int notificationId) async {
+    try {
+      await http.put(
+        Uri.parse('http://localhost:8086/api/notifications/$notificationId/read'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 5), onTimeout: () => throw Exception('Timeout'));
+    } catch (_) {}
+  }
+
   // ==================== SUBSCRIPTION ENDPOINTS ====================
 
   /// Obtener planes de suscripción disponibles globales (deprecated, usar getPlansByParking en su lugar)

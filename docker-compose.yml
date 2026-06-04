@@ -177,6 +177,64 @@ services:
     networks:
       - easypark-network
 
+  # ==================== PAYMENT SERVICE (Spring Boot Microservice) ====================
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: easypark-payment
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${PAYMENT_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${PAYMENT_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_PAYMENT}
+      SPRING_APPLICATION_NAME: payment-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
+      EUREKA_INSTANCE_HOSTNAME: payment-service
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
+      PAYMENT_SUCCESS_URL: ${PAYMENT_SUCCESS_URL}
+      PAYMENT_FAILURE_URL: ${PAYMENT_FAILURE_URL}
+      PAYMENT_PENDING_URL: ${PAYMENT_PENDING_URL}
+    ports:
+      - "${SERVER_PORT_PAYMENT}:${SERVER_PORT_PAYMENT}"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
+  # ==================== NOTIFICATION SERVICE (Spring Boot Microservice) ====================
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: easypark-notification
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${NOTIFICATION_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${NOTIFICATION_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+      SERVER_PORT: ${SERVER_PORT_NOTIFICATION}
+      SPRING_APPLICATION_NAME: notification-service
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS}
+      EUREKA_INSTANCE_HOSTNAME: notification-service
+    ports:
+      - "${SERVER_PORT_NOTIFICATION}:${SERVER_PORT_NOTIFICATION}"
+    depends_on:
+      dbUser:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - easypark-network
+
   # ==================== OWNER APP (React) ====================
   owner-app:
     build:
@@ -226,6 +284,8 @@ services:
       - reservation-service
       - review-service
       - subscription-service
+      - payment-service
+      - notification-service
       - owner-app
       - admin-app
       - eureka

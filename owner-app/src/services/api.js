@@ -40,6 +40,20 @@ const subscriptionApi = axios.create({
   },
 });
 
+const paymentApi = axios.create({
+  baseURL: process.env.REACT_APP_PAYMENT_API_URL || 'http://localhost:8085',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const notificationApi = axios.create({
+  baseURL: process.env.REACT_APP_NOTIFICATION_API_URL || 'http://localhost:8086',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Agregar token a cada request si existe
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -120,22 +134,28 @@ reservationApi.interceptors.response.use(
 
 subscriptionApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
-
 subscriptionApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
+    if (error.response?.status === 401) { localStorage.removeItem('token'); window.location.href = '/login'; }
     return Promise.reject(error);
   }
 );
+
+paymentApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+notificationApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 // ==================== USER ENDPOINTS ====================
 
@@ -280,7 +300,7 @@ export const reservationService = {
     return reservationApi.get(`/api/reservations/space/${spaceId}`);
   },
 
-  // Cancelar reserva
+  // Cancelar reserva (solo permitido después de 15 min si conductor no llegó)
   cancelReservation: (id) => {
     return reservationApi.put(`/api/reservations/${id}/cancel`);
   },
@@ -288,6 +308,11 @@ export const reservationService = {
   // Completar reserva
   completeReservation: (id) => {
     return reservationApi.put(`/api/reservations/${id}/complete`);
+  },
+
+  // Propietario confirma llegada del conductor
+  ownerConfirmArrival: (id) => {
+    return reservationApi.put(`/api/reservations/${id}/owner-confirm`);
   },
 };
 
@@ -383,6 +408,23 @@ export const subscriptionService = {
     subscriptionApi.get(`/api/subscriptions/parking/${parkingId}/active`),
 };
 
+// ==================== PAYMENT ENDPOINTS ====================
+
+export const paymentService = {
+  createInvoice: (invoiceData) => paymentApi.post('/api/invoices', invoiceData),
+  getInvoiceById: (id) => paymentApi.get(`/api/invoices/${id}`),
+  getInvoiceByReservation: (reservationId) => paymentApi.get(`/api/invoices/reservation/${reservationId}`),
+  getInvoicesByDriver: (driverId) => paymentApi.get(`/api/invoices/driver/${driverId}`),
+};
+
+// ==================== NOTIFICATION ENDPOINTS ====================
+
+export const notificationService = {
+  getUnread: (userId) => notificationApi.get(`/api/notifications/user/${userId}/unread`),
+  getAll: (userId) => notificationApi.get(`/api/notifications/user/${userId}`),
+  markAsRead: (id) => notificationApi.put(`/api/notifications/${id}/read`),
+};
+
 export default {
   userService,
   parkingService,
@@ -390,4 +432,6 @@ export default {
   reservationService,
   reviewService,
   subscriptionService,
+  paymentService,
+  notificationService,
 };

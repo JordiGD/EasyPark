@@ -294,3 +294,157 @@
     flex-direction: column;
   }
 }
+
+/* ===== NUEVOS ESTILOS - FLUJO DE LLEGADA Y PAGOS ===== */
+
+/* Campana de notificaciones */
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+}
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #f44336;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: 36px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 8px 0;
+}
+.notif-empty {
+  padding: 16px;
+  color: #888;
+  text-align: center;
+  font-size: 14px;
+}
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.notif-msg { margin: 0 0 4px; font-size: 14px; color: #333; }
+.notif-time { margin: 0 0 6px; font-size: 11px; color: #aaa; }
+.notif-read {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #666;
+}
+.notif-read:hover { background: #f5f5f5; }
+
+/* Botones de acciones */
+.btn-confirm {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-confirm:hover { background: #388E3C; }
+
+.btn-invoice {
+  background: #9C27B0;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.btn-invoice:hover { background: #6A1B9A; }
+.btn-invoice:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-view-payment {
+  background: #FF5722;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s;
+}
+.btn-view-payment:hover { background: #BF360C; }
+
+/* Modal Factura */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal-box {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-box h3 { margin: 0 0 6px; font-size: 20px; color: #333; }
+.modal-sub { margin: 0 0 20px; color: #888; font-size: 13px; }
+.modal-field { margin-bottom: 16px; }
+.modal-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
+.modal-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+.modal-field input:focus { outline: none; border-color: #9C27B0; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+.btn-cancel-modal {
+  background: #f5f5f5;
+  color: #555;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-cancel-modal:hover { background: #e0e0e0; }
+
+/* Status badge con colores sólidos */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  border: none !important;
+  white-space: nowrap;
+}

@@ -204,4 +204,55 @@ VALUES
   (1, 'Plan Premium', 'Plan para conductores frecuentes', 29.99, 15, 8, 200, '["Priority booking", "Customer support", "Discounted rates"]', TRUE),
   (1, 'Plan VIP', 'Plan máximo con todos los beneficios', 59.99, 30, NULL, NULL, '["Priority booking", "24/7 support", "VIP rates", "Free cancellation"]', TRUE);
 
+-- ==================== CREAR BASE DE DATOS NOTIFICATION (NOTIFICATION SERVICE) ====================
+CREATE DATABASE IF NOT EXISTS notification_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE notification_db;
+
+CREATE TABLE IF NOT EXISTS notification (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  target_user_id BIGINT NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  message VARCHAR(500) NOT NULL,
+  reservation_id BIGINT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_target_user_id (target_user_id),
+  INDEX idx_reservation_id (reservation_id),
+  INDEX idx_read (is_read)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP USER IF EXISTS 'notification_user'@'%';
+CREATE USER 'notification_user'@'%' IDENTIFIED BY 'notification_pass123';
+GRANT ALL PRIVILEGES ON notification_db.* TO 'notification_user'@'%';
+
+-- ==================== CREAR BASE DE DATOS PAYMENT (PAYMENT SERVICE) ====================
+CREATE DATABASE IF NOT EXISTS payment_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE payment_db;
+
+CREATE TABLE IF NOT EXISTS invoice (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  reservation_id BIGINT NOT NULL UNIQUE,
+  driver_id BIGINT NOT NULL,
+  owner_id BIGINT NOT NULL,
+  parking_id BIGINT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  description VARCHAR(500),
+  status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+  mercado_pago_preference_id VARCHAR(255),
+  payment_url VARCHAR(1000),
+  mercado_pago_payment_id VARCHAR(255),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  paid_at DATETIME,
+  INDEX idx_reservation_id (reservation_id),
+  INDEX idx_driver_id (driver_id),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP USER IF EXISTS 'payment_user'@'%';
+CREATE USER 'payment_user'@'%' IDENTIFIED BY 'payment_pass123';
+GRANT ALL PRIVILEGES ON payment_db.* TO 'payment_user'@'%';
+
 FLUSH PRIVILEGES;

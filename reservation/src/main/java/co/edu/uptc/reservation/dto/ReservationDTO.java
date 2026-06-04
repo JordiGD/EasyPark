@@ -15,6 +15,11 @@ public class ReservationDTO {
     private Long parkingId;
     private String status;
     private LocalDateTime startTime;
+    private LocalDateTime arrivalDeadline;
+    private LocalDateTime driverConfirmedAt;
+    private LocalDateTime ownerConfirmedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean canOwnerCancel;
+    private boolean canGenerateInvoice;
 }

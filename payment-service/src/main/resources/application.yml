@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:dbUser}:${MYSQL_PORT:3306}/${PAYMENT_DB_NAME:payment_db}
+    username: ${PAYMENT_DB_USER:payment_user}
+    password: ${PAYMENT_DB_PASSWORD:payment_pass123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: ${SERVER_PORT:8085}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:true}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:payment-service}
+
+mercadopago:
+  access-token: ${MERCADOPAGO_ACCESS_TOKEN}
+  webhook-secret: ${MERCADOPAGO_WEBHOOK_SECRET:}
+
+app:
+  reservation-service-url: http://easypark-reservation:8082
+  notification-service-url: http://easypark-notification:8086
+  success-url: ${PAYMENT_SUCCESS_URL:http://localhost:3000/payment/success}
+  failure-url: ${PAYMENT_FAILURE_URL:http://localhost:3000/payment/failure}
+  pending-url: ${PAYMENT_PENDING_URL:http://localhost:3000/payment/pending}
